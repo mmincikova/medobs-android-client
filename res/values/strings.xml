@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Medobs</string>
+    <string name="label_select_ambulance">Ambulancie</string>
+    <string name="label_settings">Nastavenia</string>
+</resources>

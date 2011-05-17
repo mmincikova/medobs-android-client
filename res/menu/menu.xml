@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:id="@+id/menu_select_ambulance"
+		android:title="@string/label_select_ambulance"
+		android:icon="@android:drawable/ic_menu_add" />
+   <item android:id="@+id/menu_settings"
+		android:title="@string/label_settings"
+		android:icon="@android:drawable/ic_menu_manage" />
+</menu>
