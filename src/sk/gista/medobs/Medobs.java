@@ -42,15 +42,15 @@ public class Medobs extends Activity {
 	private static final String SERVER_URL_SETTING = "server_url";
 	private static final String USERNAME_SETTING = "username";
 	private static final String PASSWORD_SETTING = "password";
-	private static final String AMBULANCE_SETTING = "ambulance";
+	private static final String PLACE_SETTING = "place";
 
-	private static final int AMBULANCES_DIALOG = 0;
+	private static final int PLACES_DIALOG = 0;
 	//private static final String URL = "http://medobs.tag.sk";
 	//private static final String URL = "http://10.0.2.2:8000";
 	private Client client;
 	private Calendar calendar;
-	private List<Place> ambulances;
-	private Place currentAmbulance;
+	private List<Place> places;
+	private Place currentPlace;
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	private SharedPreferences prefferences;
 	
@@ -130,28 +130,28 @@ public class Medobs extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.menu_select_ambulance:
-			showDialog(AMBULANCES_DIALOG);
+		case R.id.menu_select_place:
+			showDialog(PLACES_DIALOG);
 			return true;
 		case R.id.menu_settings:
 			saveState();
 			startActivity(new Intent(this, Settings.class));
-			ambulances = null;
+			places = null;
 			return true;
 		}
 		return false;
 	}
 
 	private void saveState() {
-		if (currentAmbulance != null) {
+		if (currentPlace != null) {
 			Editor editor = prefferences.edit();
-			editor.putInt(AMBULANCE_SETTING, currentAmbulance.getId());
+			editor.putInt(PLACE_SETTING, currentPlace.getId());
 			editor.commit();
 		}
 	}
 
 	private void fetchReservations() {
-		if (currentAmbulance != null && client != null && !client.isExecuting()) {
+		if (currentPlace != null && client != null && !client.isExecuting()) {
 			System.out.println("execute");
 			new FetchReservationsTask().execute(null);
 		}
@@ -181,19 +181,19 @@ public class Medobs extends Activity {
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog = null;
-		if (id == AMBULANCES_DIALOG) {
+		if (id == PLACES_DIALOG) {
 			DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
 
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					if (which < ambulances.size()) {
-						setAmbulance(ambulances.get(which));
+					if (which < places.size()) {
+						setCurrentPlace(places.get(which));
 						fetchReservations();
 					}
 				}
 			};
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.label_select_ambulance);
+			builder.setTitle(R.string.label_select_place);
 			builder.setItems(new String[0], listener);
 			dialog = builder.create();
 		}
@@ -203,14 +203,14 @@ public class Medobs extends Activity {
 	@Override
 	protected void onPrepareDialog(int id, Dialog dialog) {
 		super.onPrepareDialog(id, dialog);
-		if (id == AMBULANCES_DIALOG && ambulances != null) {
+		if (id == PLACES_DIALOG && places != null) {
 			AlertDialog layersDialog = (AlertDialog) dialog;
 			
-			String[] items = new String[ambulances.size()];
+			String[] items = new String[places.size()];
 			int selectedItem = -1;
-			for (int i = 0; i < ambulances.size(); i++) {
-				items[i] = ambulances.get(i).getName();
-				if (currentAmbulance != null && currentAmbulance.getId() == ambulances.get(i).getId()) {
+			for (int i = 0; i < places.size(); i++) {
+				items[i] = places.get(i).getName();
+				if (currentPlace != null && currentPlace.getId() == places.get(i).getId()) {
 					selectedItem = i;
 				}
 			}
@@ -224,10 +224,10 @@ public class Medobs extends Activity {
 		}
 	}
 
-	private void setAmbulance(Place ambulance) {
-		currentAmbulance = ambulance;
-		if (currentAmbulance != null) {
-			setTitle(String.format("%s - %s (%s)", getString(R.string.app_name), currentAmbulance.getName(), currentAmbulance.getStreet()));
+	private void setCurrentPlace(Place place) {
+		currentPlace = place;
+		if (currentPlace != null) {
+			setTitle(String.format("%s - %s (%s)", getString(R.string.app_name), currentPlace.getName(), currentPlace.getStreet()));
 		} else {
 			setTitle(getString(R.string.app_name));
 		}
@@ -253,7 +253,7 @@ public class Medobs extends Activity {
 		@Override
 		protected String doInBackground(Object... params) {
 			String content = null;
-			if (ambulances == null) {
+			if (places == null) {
 				HttpResponse resp = null;
 				try {
 					resp = client.httpGet("/places/");
@@ -272,28 +272,27 @@ public class Medobs extends Activity {
 		@Override
 		protected void onPostExecute(String content) {
 			if (content != null) {
-				int lastAmbulanceId = prefferences.getInt(AMBULANCE_SETTING, 0);
-				List<Place> retrievedAmbulances = new ArrayList<Place>();
+				int lastPlaceId = prefferences.getInt(PLACE_SETTING, 0);
+				places = new ArrayList<Place>();
 				try {
-					JSONArray jsonAmbulances = new JSONArray(content);
-					for (int i = 0; i < jsonAmbulances.length(); i++) {
-						JSONObject jsonAmbulance = jsonAmbulances.getJSONObject(i);
-						int id = jsonAmbulance.getInt("id");
-						String name = jsonAmbulance.getString("name");
-						String street = jsonAmbulance.getString("street");
-						String city = jsonAmbulance.getString("city");
-						Place ambulance = new Place(id, name, street, city);
-						retrievedAmbulances.add(ambulance);
-						if (id == lastAmbulanceId) {
-							setAmbulance(ambulance);
+					JSONArray jsonPlaces = new JSONArray(content);
+					for (int i = 0; i < jsonPlaces.length(); i++) {
+						JSONObject jsonPlace = jsonPlaces.getJSONObject(i);
+						int id = jsonPlace.getInt("id");
+						String name = jsonPlace.getString("name");
+						String street = jsonPlace.getString("street");
+						String city = jsonPlace.getString("city");
+						Place place = new Place(id, name, street, city);
+						places.add(place);
+						if (id == lastPlaceId) {
+							setCurrentPlace(place);
 						}
 					}
 				}  catch (JSONException e) {
 					e.printStackTrace();
 				}
-				ambulances = retrievedAmbulances;
-				if (currentAmbulance == null && ambulances.size() > 0) {
-					setAmbulance(ambulances.get(0));
+				if (currentPlace == null && places.size() > 0) {
+					setCurrentPlace(places.get(0));
 				}
 				fetchReservations();
 			}
@@ -315,7 +314,7 @@ public class Medobs extends Activity {
 			String date = dateFormat.format(calendar.getTime());
 			HttpResponse resp = null;
 			try {
-				resp = client.httpGet("/reservations/"+date+"/"+currentAmbulance.getId()+"/");
+				resp = client.httpGet("/reservations/"+date+"/"+currentPlace.getId()+"/");
 				if (resp.getStatusLine().getStatusCode() < 400) {
 					content = readInputStream(resp.getEntity().getContent());
 				}
