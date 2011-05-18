@@ -251,6 +251,11 @@ public class Medobs extends Activity {
 	private class FetchPlacesTask extends AsyncTask<Object, Integer, String> {
 
 		@Override
+		protected void onPreExecute() {
+			progressBar.setVisibility(View.VISIBLE);
+		}
+
+		@Override
 		protected String doInBackground(Object... params) {
 			String content = null;
 			if (places == null) {
@@ -296,6 +301,7 @@ public class Medobs extends Activity {
 				}
 				fetchReservations();
 			}
+			progressBar.setVisibility(View.INVISIBLE);
 		}
 	}
 
