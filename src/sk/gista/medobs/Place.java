@@ -1,13 +1,13 @@
 package sk.gista.medobs;
 
-public class Ambulance {
+public class Place {
 
 	private int id;
 	private String name;
 	private String street;
 	private String city;
 	
-	public Ambulance(int id, String name, String street, String city) {
+	public Place(int id, String name, String street, String city) {
 		this.id = id;
 		this.name = name;
 		this.street = street;

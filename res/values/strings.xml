@@ -8,4 +8,5 @@
 	<string name="server_url_summary">URL server address</string>
 	<string name="label_username">Username</string>
 	<string name="label_password">Password</string>
+	<string name="msg_login_failed">Login to server was not successful. Check your login credentials.</string>
 </resources>

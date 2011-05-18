@@ -23,6 +23,7 @@ public class Client {
 	
 	private String serverUrl;
 	protected HttpClient client = new DefaultHttpClient();
+	private HttpUriRequest currentRequest;
 	
 	public Client(String serverUrl) {
 		this.serverUrl = serverUrl;
@@ -68,7 +69,8 @@ public class Client {
 		return httpRequest(request);
 	}
 
-	private HttpResponse httpRequest(HttpUriRequest request) throws IOException {
+	public HttpResponse httpRequest(HttpUriRequest request) throws IOException {
+		currentRequest = request;
 		HttpResponse response = null;
 		try {
 			response = client.execute(request);
@@ -85,8 +87,19 @@ public class Client {
 		}
 		return response;
 	}
-	
-	private void closeResponse(HttpResponse response) {
+
+	public boolean isExecuting() {
+		return currentRequest != null;
+	}
+
+	public void cancelCurrentRequest() {
+		if (currentRequest != null) {
+			currentRequest.abort();
+			currentRequest = null;
+		}
+	}
+
+	public void closeResponse(HttpResponse response) {
 		if (response != null) {
 			try {
 				response.getEntity().consumeContent();
@@ -94,5 +107,6 @@ public class Client {
 				Log.e(TAG, "closing connection failed", e);
 			}
 		}
+		currentRequest = null;
 	}
 }

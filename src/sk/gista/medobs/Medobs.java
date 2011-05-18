@@ -14,7 +14,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import sk.gista.medobs.Reservation.Status;
 import sk.gista.medobs.view.ReservationAdapter;
 import sk.gista.medobs.widget.DateWidget;
 import android.app.Activity;
@@ -24,6 +23,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Menu;
@@ -33,7 +33,9 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Medobs extends Activity {
 
@@ -47,8 +49,8 @@ public class Medobs extends Activity {
 	//private static final String URL = "http://10.0.2.2:8000";
 	private Client client;
 	private Calendar calendar;
-	private List<Ambulance> ambulances;
-	private Ambulance currentAmbulance;
+	private List<Place> ambulances;
+	private Place currentAmbulance;
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	private SharedPreferences prefferences;
 	
@@ -57,6 +59,7 @@ public class Medobs extends Activity {
 	private ImageButton showCalendarButton;
 	private ImageButton prevDayButton;
 	private ImageButton nextDayButton;
+	private ProgressBar progressBar;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -69,6 +72,7 @@ public class Medobs extends Activity {
 		selectedDateView = (TextView) findViewById(R.id.selected_date_text);
 		prevDayButton = (ImageButton) findViewById(R.id.prev_day);
 		nextDayButton = (ImageButton) findViewById(R.id.next_day);
+		progressBar = (ProgressBar) findViewById(R.id.progress_bar);
 		
 		calendar = Calendar.getInstance();
 		
@@ -108,36 +112,9 @@ public class Medobs extends Activity {
 			String username = prefferences.getString(USERNAME_SETTING, "");
 			String password = prefferences.getString(PASSWORD_SETTING, "");
 			if (client.login(username, password)) {
-				int lastAmbulanceId = prefferences.getInt(AMBULANCE_SETTING, 0);
-				if (ambulances == null) {
-					try {
-						HttpResponse resp = client.httpGet("/places/");
-						String content = readInputStream(resp.getEntity().getContent());
-						JSONArray jsonAmbulances = new JSONArray(content);
-						List<Ambulance> retrievedAmbulances = new ArrayList<Ambulance>();
-						for (int i = 0; i < jsonAmbulances.length(); i++) {
-							JSONObject jsonAmbulance = jsonAmbulances.getJSONObject(i);
-							int id = jsonAmbulance.getInt("id");
-							String name = jsonAmbulance.getString("name");
-							String street = jsonAmbulance.getString("street");
-							String city = jsonAmbulance.getString("city");
-							Ambulance ambulance = new Ambulance(id, name, street, city);
-							retrievedAmbulances.add(ambulance);
-							if (id == lastAmbulanceId) {
-								setAmbulance(ambulance);
-							}
-						}
-						ambulances = retrievedAmbulances;
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
-				}
-				if (currentAmbulance == null && ambulances != null && ambulances.size() > 0) {
-					setAmbulance(ambulances.get(0));
-				}
-				fetchReservations();
+				new FetchPlacesTask().execute(null);
+			} else {
+				showMessage(R.string.msg_login_failed);
 			}
 		}
 	}
@@ -174,27 +151,9 @@ public class Medobs extends Activity {
 	}
 
 	private void fetchReservations() {
-		if (client != null && currentAmbulance != null) {
-			List<Reservation> reservations = new ArrayList<Reservation>();
-			try {
-				String date = dateFormat.format(calendar.getTime());
-				HttpResponse resp = client.httpGet("/reservations/"+date+"/"+currentAmbulance.getId()+"/");
-				String content = readInputStream(resp.getEntity().getContent());
-				JSONArray array = new JSONArray(content);
-				for (int i = 0; i < array.length(); i++) {
-					JSONObject reservation = array.getJSONObject(i);
-					int status = reservation.getInt("status");
-					String time = reservation.getString("time");
-					String patient = reservation.getString("patient");
-					reservations.add(new Reservation(time, Status.valueOf(status), patient));
-				}
-				selectedDateView.setText(date);
-				reservationsView.setAdapter(new ReservationAdapter(this, reservations));
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
+		if (currentAmbulance != null && client != null && !client.isExecuting()) {
+			System.out.println("execute");
+			new FetchReservationsTask().execute(null);
 		}
 	}
 
@@ -265,13 +224,17 @@ public class Medobs extends Activity {
 		}
 	}
 
-	private void setAmbulance(Ambulance ambulance) {
+	private void setAmbulance(Place ambulance) {
 		currentAmbulance = ambulance;
 		if (currentAmbulance != null) {
 			setTitle(String.format("%s - %s (%s)", getString(R.string.app_name), currentAmbulance.getName(), currentAmbulance.getStreet()));
 		} else {
 			setTitle(getString(R.string.app_name));
 		}
+	}
+
+	private void showMessage(int resid) {
+		Toast.makeText(this, resid, Toast.LENGTH_SHORT).show();
 	}
 
 	public static String readInputStream(InputStream is) throws IOException {
@@ -283,5 +246,105 @@ public class Medobs extends Activity {
 		}
 		input.close();
 		return content.toString();
+	}
+
+	private class FetchPlacesTask extends AsyncTask<Object, Integer, String> {
+
+		@Override
+		protected String doInBackground(Object... params) {
+			String content = null;
+			if (ambulances == null) {
+				HttpResponse resp = null;
+				try {
+					resp = client.httpGet("/places/");
+					if (resp.getStatusLine().getStatusCode() < 400) {
+						content = readInputStream(resp.getEntity().getContent());
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} finally {
+					client.closeResponse(resp);
+				}
+			}
+			return content;
+		}
+
+		@Override
+		protected void onPostExecute(String content) {
+			if (content != null) {
+				int lastAmbulanceId = prefferences.getInt(AMBULANCE_SETTING, 0);
+				List<Place> retrievedAmbulances = new ArrayList<Place>();
+				try {
+					JSONArray jsonAmbulances = new JSONArray(content);
+					for (int i = 0; i < jsonAmbulances.length(); i++) {
+						JSONObject jsonAmbulance = jsonAmbulances.getJSONObject(i);
+						int id = jsonAmbulance.getInt("id");
+						String name = jsonAmbulance.getString("name");
+						String street = jsonAmbulance.getString("street");
+						String city = jsonAmbulance.getString("city");
+						Place ambulance = new Place(id, name, street, city);
+						retrievedAmbulances.add(ambulance);
+						if (id == lastAmbulanceId) {
+							setAmbulance(ambulance);
+						}
+					}
+				}  catch (JSONException e) {
+					e.printStackTrace();
+				}
+				ambulances = retrievedAmbulances;
+				if (currentAmbulance == null && ambulances.size() > 0) {
+					setAmbulance(ambulances.get(0));
+				}
+				fetchReservations();
+			}
+		}
+	}
+
+	private class FetchReservationsTask extends AsyncTask<Object, Integer, String> {
+
+		@Override
+		protected void onPreExecute() {
+			String date = dateFormat.format(calendar.getTime());
+			selectedDateView.setText(date);
+			progressBar.setVisibility(View.VISIBLE);
+		}
+
+		@Override
+		protected String doInBackground(Object ... params) {
+			String content = "";
+			String date = dateFormat.format(calendar.getTime());
+			HttpResponse resp = null;
+			try {
+				resp = client.httpGet("/reservations/"+date+"/"+currentAmbulance.getId()+"/");
+				if (resp.getStatusLine().getStatusCode() < 400) {
+					content = readInputStream(resp.getEntity().getContent());
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				client.closeResponse(resp);
+			}
+			return content;
+		}
+
+		@Override
+		protected void onPostExecute(String content) {
+			progressBar.setVisibility(View.INVISIBLE);
+			
+			List<Reservation> reservations = new ArrayList<Reservation>();
+			try {
+				JSONArray array = new JSONArray(content);
+				for (int i = 0; i < array.length(); i++) {
+					JSONObject reservation = array.getJSONObject(i);
+					int status = reservation.getInt("status");
+					String time = reservation.getString("time");
+					String patient = reservation.getString("patient");
+					reservations.add(new Reservation(time, Reservation.Status.valueOf(status), patient));
+				}
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			reservationsView.setAdapter(new ReservationAdapter(Medobs.this, reservations));
+		}
 	}
 }
