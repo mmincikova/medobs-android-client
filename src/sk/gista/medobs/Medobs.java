@@ -18,6 +18,9 @@ import sk.gista.medobs.Reservation.Status;
 import sk.gista.medobs.view.ReservationAdapter;
 import sk.gista.medobs.widget.DateWidget;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -27,6 +30,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -37,7 +41,8 @@ public class Medobs extends Activity {
 	private static final String USERNAME_SETTING = "username";
 	private static final String PASSWORD_SETTING = "password";
 	private static final String AMBULANCE_SETTING = "ambulance";
-	
+
+	private static final int AMBULANCES_DIALOG = 0;
 	//private static final String URL = "http://medobs.tag.sk";
 	//private static final String URL = "http://10.0.2.2:8000";
 	private Client client;
@@ -119,7 +124,7 @@ public class Medobs extends Activity {
 							Ambulance ambulance = new Ambulance(id, name, street, city);
 							retrievedAmbulances.add(ambulance);
 							if (id == lastAmbulanceId) {
-								currentAmbulance = ambulance;
+								setAmbulance(ambulance);
 							}
 						}
 						ambulances = retrievedAmbulances;
@@ -130,10 +135,7 @@ public class Medobs extends Activity {
 					}
 				}
 				if (currentAmbulance == null && ambulances != null && ambulances.size() > 0) {
-					currentAmbulance = ambulances.get(0);
-				}
-				if (currentAmbulance != null) {
-					setTitle(String.format("%s - %s (%s)", getString(R.string.app_name), currentAmbulance.getName(), currentAmbulance.getStreet()));
+					setAmbulance(ambulances.get(0));
 				}
 				fetchReservations();
 			}
@@ -151,6 +153,9 @@ public class Medobs extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		case R.id.menu_select_ambulance:
+			showDialog(AMBULANCES_DIALOG);
+			return true;
 		case R.id.menu_settings:
 			saveState();
 			startActivity(new Intent(this, Settings.class));
@@ -164,6 +169,7 @@ public class Medobs extends Activity {
 		if (currentAmbulance != null) {
 			Editor editor = prefferences.edit();
 			editor.putInt(AMBULANCE_SETTING, currentAmbulance.getId());
+			editor.commit();
 		}
 	}
 
@@ -195,11 +201,12 @@ public class Medobs extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
+		saveState();
 		if (client != null) {
 			client.logout();
 		}
 	}
-	
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
@@ -210,6 +217,61 @@ public class Medobs extends Activity {
 			System.out.println(calendar.get(Calendar.MONTH));
 	    	fetchReservations();
 	  	}
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		Dialog dialog = null;
+		if (id == AMBULANCES_DIALOG) {
+			DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					if (which < ambulances.size()) {
+						setAmbulance(ambulances.get(which));
+						fetchReservations();
+					}
+				}
+			};
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.label_select_ambulance);
+			builder.setItems(new String[0], listener);
+			dialog = builder.create();
+		}
+		return dialog;
+	}
+
+	@Override
+	protected void onPrepareDialog(int id, Dialog dialog) {
+		super.onPrepareDialog(id, dialog);
+		if (id == AMBULANCES_DIALOG && ambulances != null) {
+			AlertDialog layersDialog = (AlertDialog) dialog;
+			
+			String[] items = new String[ambulances.size()];
+			int selectedItem = -1;
+			for (int i = 0; i < ambulances.size(); i++) {
+				items[i] = ambulances.get(i).getName();
+				if (currentAmbulance != null && currentAmbulance.getId() == ambulances.get(i).getId()) {
+					selectedItem = i;
+				}
+			}
+			ListView list = layersDialog.getListView();
+			list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+			
+			layersDialog.getListView().setAdapter(new ArrayAdapter<String>(this, R.layout.simple_list_item_single_choice, items));
+			if (selectedItem != -1) {
+				list.setItemChecked(selectedItem, true);
+			}
+		}
+	}
+
+	private void setAmbulance(Ambulance ambulance) {
+		currentAmbulance = ambulance;
+		if (currentAmbulance != null) {
+			setTitle(String.format("%s - %s (%s)", getString(R.string.app_name), currentAmbulance.getName(), currentAmbulance.getStreet()));
+		} else {
+			setTitle(getString(R.string.app_name));
+		}
 	}
 
 	public static String readInputStream(InputStream is) throws IOException {
