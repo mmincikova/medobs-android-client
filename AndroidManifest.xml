@@ -12,6 +12,7 @@
             </intent-filter>
         </activity>
 		<activity android:name="sk.gista.medobs.widget.DateWidget" android:label="Calendar" android:theme="@android:style/Theme.Dialog"/>
+		<activity android:label="@string/label_settings" android:name="sk.gista.medobs.Settings" android:screenOrientation="portrait"/>
     </application>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-sdk android:minSdkVersion="7" />
