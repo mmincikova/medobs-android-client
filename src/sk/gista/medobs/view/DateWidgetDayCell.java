@@ -36,6 +36,7 @@ public class DateWidgetDayCell extends View {
 	private boolean bToday = false;
 	private boolean bHoliday = false;
 	private boolean bTouchedDown = false;
+	private boolean enabled;
 
 	// methods
 	public DateWidgetDayCell(Context context, int iWidth, int iHeight) {
@@ -56,10 +57,11 @@ public class DateWidgetDayCell extends View {
 		}
 	}
 
-	public void setData(int iYear, int iMonth, int iDay, boolean bToday, boolean bHoliday, int iActiveMonth) {
+	public void setData(int iYear, int iMonth, int iDay, boolean bToday, boolean bHoliday, int iActiveMonth, boolean enabled) {
 		iDateYear = iYear;
 		iDateMonth = iMonth;
 		iDateDay = iDay;
+		this.enabled = enabled;
 
 		this.sDate = Integer.toString(iDateDay);
 		this.bIsActiveMonth = (iDateMonth == iActiveMonth);
@@ -129,16 +131,15 @@ public class DateWidgetDayCell extends View {
 		if (bSelected || bFocused) {
 			LinearGradient lGradBkg = null;
 
-			if (bFocused) {
-				lGradBkg = new LinearGradient(rect.left, 0, rect.right, 0, DayStyle.iColorBkgFocusDark,
-						DayStyle.iColorBkgFocusLight, Shader.TileMode.CLAMP);
-			}
-
 			if (bSelected) {
 				lGradBkg = new LinearGradient(rect.left, 0, rect.right, 0, DayStyle.iColorBkgSelectedDark,
 						DayStyle.iColorBkgSelectedLight, Shader.TileMode.CLAMP);
 			}
-
+			
+			if (bFocused) {
+				lGradBkg = new LinearGradient(rect.left, 0, rect.right, 0, DayStyle.iColorBkgFocusDark,
+						DayStyle.iColorBkgFocusLight, Shader.TileMode.CLAMP);
+			}
 			if (lGradBkg != null) {
 				pt.setShader(lGradBkg);
 				canvas.drawRect(rect, pt);
@@ -181,6 +182,9 @@ public class DateWidgetDayCell extends View {
 				pt.setColor(DayStyle.iColorTextFocused);
 		} else {
 			pt.setColor(DayStyle.getColorText(bHoliday, bToday));
+		}
+		if (enabled) {
+			pt.setColor(Color.BLACK);
 		}
 
 		if (!bIsActiveMonth)

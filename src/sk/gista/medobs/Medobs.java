@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.http.HttpResponse;
 import org.json.JSONArray;
@@ -64,6 +65,8 @@ public class Medobs extends Activity implements CalendarListener {
 	private ImageButton prevDayButton;
 	private ImageButton nextDayButton;
 	private ProgressBar progressBar;
+	
+	private CalendarView calendarView;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -211,7 +214,7 @@ public class Medobs extends Activity implements CalendarListener {
 		case CALENDAR_DIALOG:
 			dialog = new Dialog(this);
 			dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-			CalendarView calendarView = new CalendarView(this, calendar, Calendar.MONDAY, false);
+			calendarView = new CalendarView(this, calendar, Calendar.MONDAY, false);
 			dialog.setContentView(calendarView);
 			calendarView.setCalendarListener(this);
 		}
@@ -409,15 +412,20 @@ public class Medobs extends Activity implements CalendarListener {
 				try {
 					JSONObject data = new JSONObject(content);
 					Iterator<String> it = data.keys();
-					List<Integer> enabled = new ArrayList<Integer>();
+					List<Integer> enabledDays = new ArrayList<Integer>();
 					while (it.hasNext()) {
-						it.next();
+						String date = it.next();
+						boolean enabled = data.getBoolean(date);
+						if (enabled) {
+							enabledDays.add(Integer.parseInt(date.substring(date.lastIndexOf('-')+1)));
+						}
 					}
+					System.out.println(enabledDays);
+					showDialog(CALENDAR_DIALOG);
+					calendarView.setEnabledDays(enabledDays);
 				} catch (JSONException e) {
 					
 				}
-				//DateWidget.Open(Medobs.this, false, calendar, Calendar.MONDAY);
-				showDialog(CALENDAR_DIALOG);
 			}
 		}
 	}

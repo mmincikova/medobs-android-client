@@ -35,6 +35,7 @@ public class CalendarView extends LinearLayout {
 	private Calendar curMonth = Calendar.getInstance();
 
 	private CalendarListener listener;
+	private List<Integer> enabledDays;
 
 	// fields
 	LinearLayout layContent = null;
@@ -152,14 +153,16 @@ public class CalendarView extends LinearLayout {
 		// set events
 		btnPrev.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View arg0) {
+				enabledDays = null;
 				setPrevViewItem();
 				if (listener != null) {
-					listener.onMonthChanged(CalendarView.this, curMonth);
+					listener.onMonthChanged(CalendarView.this, curMonth); // or iMonthViewCurrentMonth ?
 				}
 			}
 		});
 		btnToday.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View arg0) {
+				enabledDays = null;
 				setTodayViewItem();
 				if (listener != null) {
 					listener.onMonthChanged(CalendarView.this, curMonth);
@@ -168,6 +171,7 @@ public class CalendarView extends LinearLayout {
 		});
 		btnNext.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View arg0) {
+				enabledDays = null;
 				setNextViewItem();
 				if (listener != null) {
 					listener.onMonthChanged(CalendarView.this, curMonth);
@@ -312,8 +316,8 @@ public class CalendarView extends LinearLayout {
 				bHoliday = true;
 			if ((iMonth == Calendar.JANUARY) && (iDay == 1))
 				bHoliday = true;
-
-			dayCell.setData(iYear, iMonth, iDay, bToday, bHoliday, iMonthViewCurrentMonth);
+			boolean enabled = (enabledDays != null && (iMonth == iMonthViewCurrentMonth && enabledDays.contains(iDay)));
+			dayCell.setData(iYear, iMonth, iDay, bToday, bHoliday, iMonthViewCurrentMonth, enabled);
 
 			// check if selected day
 			bSelected = false;
@@ -437,5 +441,10 @@ public class CalendarView extends LinearLayout {
 
 	public Calendar getSelectedValue() {
 		return calSelected;
+	}
+
+	public void setEnabledDays(List<Integer> enabledDays) {
+		this.enabledDays = enabledDays;
+		updateCalendar();
 	}
 }

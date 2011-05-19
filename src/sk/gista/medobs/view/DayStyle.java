@@ -34,14 +34,14 @@ public class DayStyle {
 	public final static int iColorTextHoliday = 0xfff0f0f0;
 	public final static int iColorBkgHoliday = 0xffaaaaaa;
 
-	public final static int iColorTextToday = 0xff002200;
+	public final static int iColorTextToday = iColorText;//0xff002200;
 	public final static int iColorBkgToday = 0xff88bb88;
 
-	public final static int iColorTextSelected = 0xff001122;
+	public final static int iColorTextSelected = iColorText;//0xff001122;
 	public final static int iColorBkgSelectedLight = 0xffbbddff;
 	public final static int iColorBkgSelectedDark = 0xff225599;
 
-	public final static int iColorTextFocused = 0xff221100;
+	public final static int iColorTextFocused = iColorText;//0xff221100;
 	public final static int iColorBkgFocusLight = 0xffffddbb;
 	public final static int iColorBkgFocusDark = 0xffaa5500;
 
