@@ -84,16 +84,7 @@ public class Client {
 		currentRequest = request;
 		HttpResponse response = null;
 		try {
-			System.out.println("client: "+client+" request: "+request);
 			response = client.execute(request);
-			/*
-			if (response != null) {
-				Log.i(TAG, "status: "+response.getStatusLine());
-				for (Header h : response.getAllHeaders()) {
-					Log.i(TAG, h.getName()+":"+h.getValue());
-				}
-			}
-			*/
 		} catch (ClientProtocolException e) {
 			Log.e(TAG, "http request failed: "+request.getURI(), e);
 		}

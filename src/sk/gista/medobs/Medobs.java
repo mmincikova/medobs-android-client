@@ -373,7 +373,10 @@ public class Medobs extends Activity implements CalendarListener {
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();
+					showMessage(R.string.msg_bad_response_error);
 				}
+			} else {
+				showMessage(R.string.msg_http_error);
 			}
 			reservationsView.setAdapter(new ReservationAdapter(Medobs.this, reservations));
 		}
@@ -410,7 +413,6 @@ public class Medobs extends Activity implements CalendarListener {
 		protected void onPostExecute(String content) {
 			progressBar.setVisibility(View.INVISIBLE);
 			if (content != null) {
-				System.out.println(content);
 				try {
 					JSONObject data = new JSONObject(content);
 					Iterator<String> it = data.keys();
@@ -425,8 +427,11 @@ public class Medobs extends Activity implements CalendarListener {
 					showDialog(CALENDAR_DIALOG);
 					calendarView.setEnabledDays(enabledDays);
 				} catch (JSONException e) {
-					
+					e.printStackTrace();
+					showMessage(R.string.msg_bad_response_error);
 				}
+			} else {
+				showMessage(R.string.msg_http_error);
 			}
 		}
 	}

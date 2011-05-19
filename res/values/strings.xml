@@ -11,4 +11,6 @@
 
 	<string name="msg_login_failed">Login to server was not successful. Check your login credentials.</string>
 	<string name="msg_server_url_not_configured">Server URL address is not configured.</string>
+	<string name="msg_http_error">Http connection error occurred.</string>
+	<string name="msg_bad_response_error">Http connection error occurred.</string>
 </resources>
