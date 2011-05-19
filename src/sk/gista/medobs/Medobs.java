@@ -283,7 +283,7 @@ public class Medobs extends Activity implements CalendarListener {
 		@Override
 		protected String doInBackground(Object... params) {
 			String content = null;
-			if (places == null) {
+			if (client != null && places == null) {
 				HttpResponse resp = null;
 				try {
 					resp = client.httpGet("/places/");
@@ -344,17 +344,19 @@ public class Medobs extends Activity implements CalendarListener {
 		@Override
 		protected String doInBackground(Object ... params) {
 			String content = null;
-			String date = dateFormat.format(calendar.getTime());
-			HttpResponse resp = null;
-			try {
-				resp = client.httpGet("/reservations/"+date+"/"+currentPlace.getId()+"/");
-				if (resp.getStatusLine().getStatusCode() < 400) {
-					content = readInputStream(resp.getEntity().getContent());
+			if (client != null) {
+				String date = dateFormat.format(calendar.getTime());
+				HttpResponse resp = null;
+				try {
+					resp = client.httpGet("/reservations/"+date+"/"+currentPlace.getId()+"/");
+					if (resp.getStatusLine().getStatusCode() < 400) {
+						content = readInputStream(resp.getEntity().getContent());
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} finally {
+					client.closeResponse(resp);
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				client.closeResponse(resp);
 			}
 			return content;
 		}
