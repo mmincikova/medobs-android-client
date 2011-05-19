@@ -1,16 +1,12 @@
 package sk.gista.medobs.view;
 
 import java.util.*;
-import android.app.*;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
 import android.widget.*;
 import android.util.AttributeSet;
 import android.view.*;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
 import java.text.SimpleDateFormat;
 
 
@@ -418,7 +414,7 @@ public class CalendarView extends LinearLayout {
 		final boolean bDaySelected = (calSelected.getTimeInMillis() != 0);
 		btnNone.setEnabled(bDaySelected);
 		if (bDaySelected) {
-			String s = dateFull.format(calSelected.getTime());
+			//String s = dateFull.format(calSelected.getTime());
 			//setTitle(sStrSelected + " " + s); // TODO
 		} else {
 			//setTitle(sStrSelect); // TODO
