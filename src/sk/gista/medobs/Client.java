@@ -13,8 +13,13 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
 
 import android.util.Log;
 
@@ -22,11 +27,17 @@ public class Client {
 	private static final String TAG = "HttpClient";
 	
 	private String serverUrl;
-	protected HttpClient client = new DefaultHttpClient();
+	protected HttpClient client;
 	private HttpUriRequest currentRequest;
 	
 	public Client(String serverUrl) {
 		this.serverUrl = serverUrl;
+		BasicHttpParams params = new BasicHttpParams();
+		SchemeRegistry schemeRegistry = new SchemeRegistry();
+		schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+		ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(params, schemeRegistry);
+		client = new DefaultHttpClient(cm, params);
+		//client = new DefaultHttpClient();
 	}
 
 	public boolean login(String username, String password) {
@@ -73,6 +84,7 @@ public class Client {
 		currentRequest = request;
 		HttpResponse response = null;
 		try {
+			System.out.println("client: "+client+" request: "+request);
 			response = client.execute(request);
 			/*
 			if (response != null) {

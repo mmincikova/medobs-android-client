@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.http.HttpResponse;
 import org.json.JSONArray;
@@ -173,6 +172,9 @@ public class Medobs extends Activity implements CalendarListener {
 	public void onDetachedFromWindow() {
 		super.onDetachedFromWindow();
 		if (client != null) {
+			if (client.isExecuting()) {
+				client.cancelCurrentRequest();
+			}
 			client.logout();
 		}
 	}
@@ -339,7 +341,7 @@ public class Medobs extends Activity implements CalendarListener {
 
 		@Override
 		protected String doInBackground(Object ... params) {
-			String content = "";
+			String content = null;
 			String date = dateFormat.format(calendar.getTime());
 			HttpResponse resp = null;
 			try {
@@ -358,19 +360,20 @@ public class Medobs extends Activity implements CalendarListener {
 		@Override
 		protected void onPostExecute(String content) {
 			progressBar.setVisibility(View.INVISIBLE);
-			
 			List<Reservation> reservations = new ArrayList<Reservation>();
-			try {
-				JSONArray array = new JSONArray(content);
-				for (int i = 0; i < array.length(); i++) {
-					JSONObject reservation = array.getJSONObject(i);
-					int status = reservation.getInt("status");
-					String time = reservation.getString("time");
-					String patient = reservation.getString("patient");
-					reservations.add(new Reservation(time, Reservation.Status.valueOf(status), patient));
+			if (content != null) {
+				try {
+					JSONArray array = new JSONArray(content);
+					for (int i = 0; i < array.length(); i++) {
+						JSONObject reservation = array.getJSONObject(i);
+						int status = reservation.getInt("status");
+						String time = reservation.getString("time");
+						String patient = reservation.getString("patient");
+						reservations.add(new Reservation(time, Reservation.Status.valueOf(status), patient));
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
 				}
-			} catch (JSONException e) {
-				e.printStackTrace();
 			}
 			reservationsView.setAdapter(new ReservationAdapter(Medobs.this, reservations));
 		}
@@ -391,7 +394,6 @@ public class Medobs extends Activity implements CalendarListener {
 			HttpResponse resp = null;
 			String date = dateFormat.format(params[0].getTime());
 			try {
-				System.out.println("/days_status/"+date+"/"+currentPlace.getId()+"/");
 				resp = client.httpGet("/days_status/"+date+"/"+currentPlace.getId()+"/");
 				if (resp.getStatusLine().getStatusCode() < 400) {
 					content = readInputStream(resp.getEntity().getContent());
@@ -420,7 +422,6 @@ public class Medobs extends Activity implements CalendarListener {
 							enabledDays.add(Integer.parseInt(date.substring(date.lastIndexOf('-')+1)));
 						}
 					}
-					System.out.println(enabledDays);
 					showDialog(CALENDAR_DIALOG);
 					calendarView.setEnabledDays(enabledDays);
 				} catch (JSONException e) {
@@ -432,7 +433,10 @@ public class Medobs extends Activity implements CalendarListener {
 
 	@Override
 	public void onMonthChanged(CalendarView calendarView, Calendar value) {
-		System.out.println("onMonthChanged: "+value.getTime());
+		//System.out.println("onMonthChanged: "+value.getTime());
+		if (client != null && client.isExecuting()) {
+			client.cancelCurrentRequest();
+		}
 		new FetchDaysRask().execute(value);
 	}
 
