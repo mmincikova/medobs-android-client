@@ -1,4 +1,4 @@
-package sk.gista.medobs.widget;
+package sk.gista.medobs.view;
 
 import java.util.*;
 //import pl.magot.vetch.ancal.Utils;

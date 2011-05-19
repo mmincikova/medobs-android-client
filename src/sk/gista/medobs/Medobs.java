@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
@@ -14,8 +15,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import sk.gista.medobs.view.CalendarListener;
+import sk.gista.medobs.view.CalendarView;
 import sk.gista.medobs.view.ReservationAdapter;
-import sk.gista.medobs.widget.DateWidget;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -30,6 +32,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -37,7 +40,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class Medobs extends Activity {
+public class Medobs extends Activity implements CalendarListener {
 
 	private static final String SERVER_URL_SETTING = "server_url";
 	private static final String USERNAME_SETTING = "username";
@@ -45,13 +48,14 @@ public class Medobs extends Activity {
 	private static final String PLACE_SETTING = "place";
 
 	private static final int PLACES_DIALOG = 0;
+	private static final int CALENDAR_DIALOG = 1;
+	
 	//private static final String URL = "http://medobs.tag.sk";
 	//private static final String URL = "http://10.0.2.2:8000";
 	private Client client;
 	private Calendar calendar;
 	private List<Place> places;
 	private Place currentPlace;
-	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	private SharedPreferences prefferences;
 	
 	private ListView reservationsView;
@@ -98,7 +102,7 @@ public class Medobs extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				DateWidget.Open(Medobs.this, false, calendar, Calendar.MONDAY);
+				new FetchDaysRask().execute(calendar);
 			}
 		});
 	}
@@ -106,17 +110,22 @@ public class Medobs extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		String url = prefferences.getString(SERVER_URL_SETTING, "");
-		if (url.length() > 7) {
-			client = new Client(url);
-			String username = prefferences.getString(USERNAME_SETTING, "");
-			String password = prefferences.getString(PASSWORD_SETTING, "");
-			if (client.login(username, password)) {
-				new FetchPlacesTask().execute(null);
+		if (client == null) {
+			String url = prefferences.getString(SERVER_URL_SETTING, "");
+			if (url.length() > 7) {
+				String username = prefferences.getString(USERNAME_SETTING, "");
+				String password = prefferences.getString(PASSWORD_SETTING, "");
+				client = new Client(url);
+				if (!client.login(username, password)) {
+					showMessage(R.string.msg_login_failed);
+					return;
+				}
 			} else {
-				showMessage(R.string.msg_login_failed);
+				showMessage(R.string.msg_server_url_not_configured);
+				return;
 			}
 		}
+		new FetchPlacesTask().execute(null);
 	}
 
 	@Override
@@ -158,30 +167,32 @@ public class Medobs extends Activity {
 	}
 
 	@Override
-	protected void onPause() {
-		super.onPause();
-		saveState();
+	public void onDetachedFromWindow() {
+		super.onDetachedFromWindow();
 		if (client != null) {
 			client.logout();
 		}
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		if (requestCode == DateWidget.SELECT_DATE_REQUEST && data != null) {
-	    	final long lDate = DateWidget.GetSelectedDateOnActivityResult(requestCode, resultCode, data.getExtras(), Calendar.getInstance());
-	    	calendar.setTimeInMillis(lDate);
-	    	System.out.println(calendar.get(Calendar.DAY_OF_MONTH));
-			System.out.println(calendar.get(Calendar.MONTH));
-	    	fetchReservations();
-	  	}
+	protected void onDestroy() {
+		super.onDestroy();
+		if (client != null) {
+			client.logout();
+		}
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		saveState();
 	}
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog = null;
-		if (id == PLACES_DIALOG) {
+		switch(id) {
+		case PLACES_DIALOG:
 			DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
 
 				@Override
@@ -196,6 +207,13 @@ public class Medobs extends Activity {
 			builder.setTitle(R.string.label_select_place);
 			builder.setItems(new String[0], listener);
 			dialog = builder.create();
+			break;
+		case CALENDAR_DIALOG:
+			dialog = new Dialog(this);
+			dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+			CalendarView calendarView = new CalendarView(this, calendar, Calendar.MONDAY, false);
+			dialog.setContentView(calendarView);
+			calendarView.setCalendarListener(this);
 		}
 		return dialog;
 	}
@@ -307,6 +325,8 @@ public class Medobs extends Activity {
 
 	private class FetchReservationsTask extends AsyncTask<Object, Integer, String> {
 
+		private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
 		@Override
 		protected void onPreExecute() {
 			String date = dateFormat.format(calendar.getTime());
@@ -351,5 +371,67 @@ public class Medobs extends Activity {
 			}
 			reservationsView.setAdapter(new ReservationAdapter(Medobs.this, reservations));
 		}
+	}
+
+	private class FetchDaysRask extends AsyncTask<Calendar, Integer, String> {
+
+		private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM");
+
+		@Override
+		protected void onPreExecute() {
+			progressBar.setVisibility(View.VISIBLE);
+		}
+
+		@Override
+		protected String doInBackground(Calendar... params) {
+			String content = null;
+			HttpResponse resp = null;
+			String date = dateFormat.format(params[0].getTime());
+			try {
+				System.out.println("/days_status/"+date+"/"+currentPlace.getId()+"/");
+				resp = client.httpGet("/days_status/"+date+"/"+currentPlace.getId()+"/");
+				if (resp.getStatusLine().getStatusCode() < 400) {
+					content = readInputStream(resp.getEntity().getContent());
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				client.closeResponse(resp);
+			}
+			return content;
+		}
+
+		@Override
+		protected void onPostExecute(String content) {
+			progressBar.setVisibility(View.INVISIBLE);
+			if (content != null) {
+				System.out.println(content);
+				try {
+					JSONObject data = new JSONObject(content);
+					Iterator<String> it = data.keys();
+					List<Integer> enabled = new ArrayList<Integer>();
+					while (it.hasNext()) {
+						it.next();
+					}
+				} catch (JSONException e) {
+					
+				}
+				//DateWidget.Open(Medobs.this, false, calendar, Calendar.MONDAY);
+				showDialog(CALENDAR_DIALOG);
+			}
+		}
+	}
+
+	@Override
+	public void onMonthChanged(CalendarView calendarView, Calendar value) {
+		System.out.println("onMonthChanged: "+value.getTime());
+		new FetchDaysRask().execute(value);
+	}
+
+	@Override
+	public void onDateSelected(CalendarView calendarView) {
+		dismissDialog(CALENDAR_DIALOG);
+		calendar = calendarView.getSelectedValue();
+		fetchReservations();
 	}
 }

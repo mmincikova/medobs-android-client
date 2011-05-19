@@ -1,17 +1,20 @@
-package sk.gista.medobs.widget;
+package sk.gista.medobs.view;
 
 import java.util.*;
 import android.app.*;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.*;
+import android.util.AttributeSet;
 import android.view.*;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import java.text.SimpleDateFormat;
 
-public class DateWidget extends Activity {
+
+public class CalendarView extends LinearLayout {
 	// fields
 	private static String sStrSelect = "Select day";
 	private static String sStrSelected = "Selected day:";
@@ -29,6 +32,9 @@ public class DateWidget extends Activity {
 	private Calendar calToday = Calendar.getInstance();
 	private Calendar calCalendar = Calendar.getInstance();
 	private Calendar calSelected = Calendar.getInstance();
+	private Calendar curMonth = Calendar.getInstance();
+
+	private CalendarListener listener;
 
 	// fields
 	LinearLayout layContent = null;
@@ -52,29 +58,30 @@ public class DateWidget extends Activity {
 	private static final int iTotalWidth = (iDayCellSize * 7);
 	private static final int iSmallButtonWidth = 100;
 
+	public CalendarView(Context context) {
+		super(context);
+		onCreate(Calendar.getInstance(), Calendar.SUNDAY, true);
+	}
+
+	public CalendarView(Context context, AttributeSet attribs) {
+		super(context, attribs);
+		onCreate(Calendar.getInstance(), Calendar.SUNDAY, true);
+	}
+
+	public CalendarView(Context context, Calendar calendar, int firstDayOfWeek, boolean noneButton) {
+		super(context);
+		onCreate(calendar, firstDayOfWeek, noneButton);
+	}
+
 	// methods
-	@Override
-	public void onCreate(Bundle icicle) {
-
-		super.onCreate(icicle);
-
+	public void onCreate(Calendar calendar, int firstDayOfWeek, boolean noneButton) {
+		
 		// init calendar to defaults
-		calSelected.setTimeInMillis(0);
-		iFirstDayOfWeek = Calendar.MONDAY;
-		bNoneButton = true;
+		calSelected = calendar;
+		iFirstDayOfWeek = firstDayOfWeek;
+		bNoneButton = noneButton;
 
-		// get startup data
-		Bundle data = this.getIntent().getExtras();
-		if (data != null) {
-			if (data.containsKey("date"))
-				calSelected.setTimeInMillis(data.getLong("date"));
-			if (data.containsKey("firstDayOfWeek"))
-				iFirstDayOfWeek = data.getInt("firstDayOfWeek");
-			if (data.containsKey("noneButton"))
-				bNoneButton = data.getBoolean("noneButton");
-		}
-
-		setContentView(generateContentView());
+		generateContentView();
 
 		// initialize
 		calStartDate = getCalendarStartDate();
@@ -96,54 +103,14 @@ public class DateWidget extends Activity {
 			daySelected.requestFocus();
 	}
 
-	@Override
-	public void onStart() {
-		super.onStart();
-
-	}
-
 	public static void setStrings(String strSelect, String strSelected, String strNone) {
 		sStrSelect = new String(strSelect);
 		sStrSelected = new String(strSelected);
 		sStrNone = new String(strNone);
 	}
 
-	public static void Open(Activity parentActivity, boolean bNoneButton, final Calendar calDate, int iFirstDayOfWeek) {
-		Intent it = new Intent("android.intent.action.AnCal.ACTION_MODE_EDIT_SELECT_DATE");
-		Bundle data = new Bundle();
-		data.putLong("date", calDate.getTimeInMillis());
-		data.putInt("firstDayOfWeek", iFirstDayOfWeek);
-		data.putBoolean("noneButton", bNoneButton);
-		it.putExtras(data);
-		parentActivity.startActivityForResult(it, SELECT_DATE_REQUEST);
-		//parentActivity.startActivity(it);
-	}
-
-	public static long GetSelectedDateOnActivityResult(int requestCode, int resultCode, Bundle extras, Calendar outDate) {
-		if (requestCode == DateWidget.SELECT_DATE_REQUEST) {
-			if (resultCode == RESULT_OK) {
-				if (extras.containsKey("date")) {
-					final long lDate = extras.getLong("date");
-
-					if (lDate == 0) {
-						outDate.setTimeInMillis(0);
-					} else {
-						Calendar calSelected = Calendar.getInstance();
-						calSelected.setTimeInMillis(lDate);
-						outDate.set(Calendar.YEAR, calSelected.get(Calendar.YEAR));
-						outDate.set(Calendar.MONTH, calSelected.get(Calendar.MONTH));
-						outDate.set(Calendar.DAY_OF_MONTH, calSelected.get(Calendar.DAY_OF_MONTH));
-					}
-
-					return lDate;
-				}
-			}
-		}
-		return -1;
-	}
-
 	public LinearLayout createLayout(int iOrientation) {
-		LinearLayout lay = new LinearLayout(this);
+		LinearLayout lay = new LinearLayout(getContext());
 		lay.setLayoutParams(new LayoutParams(android.view.ViewGroup.LayoutParams.FILL_PARENT,
 				android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
 		lay.setOrientation(iOrientation);
@@ -151,14 +118,14 @@ public class DateWidget extends Activity {
 	}
 
 	public Button createButton(String sText, int iWidth, int iHeight) {
-		Button btn = new Button(this);
+		Button btn = new Button(getContext());
 		btn.setText(sText);
 		btn.setLayoutParams(new LayoutParams(iWidth, iHeight));
 		return btn;
 	}
 
 	public TextView createLabel(String sText, int iWidth, int iHeight) {
-		TextView label = new TextView(this);
+		TextView label = new TextView(getContext());
 		label.setText(sText);
 		label.setLayoutParams(new LayoutParams(iWidth, iHeight));
 		return label;
@@ -174,11 +141,11 @@ public class DateWidget extends Activity {
 		btnToday.setPadding(iHorPadding, btnToday.getPaddingTop(), iHorPadding, btnToday.getPaddingBottom());
 		btnToday.setBackgroundResource(android.R.drawable.btn_default_small);
 
-		SymbolButton btnPrev = new SymbolButton(this, SymbolButton.symbol.arrowLeft);
+		SymbolButton btnPrev = new SymbolButton(getContext(), SymbolButton.symbol.arrowLeft);
 		btnPrev.setLayoutParams(new LayoutParams(iSmallButtonWidth, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
 		btnPrev.setBackgroundResource(android.R.drawable.btn_default_small);
 
-		SymbolButton btnNext = new SymbolButton(this, SymbolButton.symbol.arrowRight);
+		SymbolButton btnNext = new SymbolButton(getContext(), SymbolButton.symbol.arrowRight);
 		btnNext.setLayoutParams(new LayoutParams(iSmallButtonWidth, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
 		btnNext.setBackgroundResource(android.R.drawable.btn_default_small);
 
@@ -186,16 +153,25 @@ public class DateWidget extends Activity {
 		btnPrev.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View arg0) {
 				setPrevViewItem();
+				if (listener != null) {
+					listener.onMonthChanged(CalendarView.this, curMonth);
+				}
 			}
 		});
 		btnToday.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View arg0) {
 				setTodayViewItem();
+				if (listener != null) {
+					listener.onMonthChanged(CalendarView.this, curMonth);
+				}
 			}
 		});
 		btnNext.setOnClickListener(new Button.OnClickListener() {
 			public void onClick(View arg0) {
 				setNextViewItem();
+				if (listener != null) {
+					listener.onMonthChanged(CalendarView.this, curMonth);
+				}
 			}
 		});
 
@@ -214,7 +190,7 @@ public class DateWidget extends Activity {
 			public void onClick(View arg0) {
 				deselectAll();
 				updateControlsState();
-				OnClose();
+				//OnClose(); //TODO
 			}
 		});
 
@@ -222,9 +198,12 @@ public class DateWidget extends Activity {
 		layBottomControls.addView(btnNone);
 	}
 
-	private View generateContentView() {
-		LinearLayout layMain = createLayout(LinearLayout.VERTICAL);
-		layMain.setPadding(8, 8, 8, 8);
+	private void generateContentView() {
+		setLayoutParams(new LayoutParams(android.view.ViewGroup.LayoutParams.FILL_PARENT,
+				android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+		setOrientation(LinearLayout.VERTICAL);
+		
+		setPadding(8, 8, 8, 8);
 
 		LinearLayout layTopControls = createLayout(LinearLayout.HORIZONTAL);
 		LinearLayout layContentTop = createLayout(LinearLayout.HORIZONTAL);
@@ -245,19 +224,17 @@ public class DateWidget extends Activity {
 		if (!bNoneButton)
 			layBottomControls.getLayoutParams().height = 0;
 
-		layMain.addView(layTopControls);
-		layMain.addView(layContentTop);
-		layMain.addView(layContent);
-		layMain.addView(layContentBottom);
-		layMain.addView(layBottomControls);
-
-		return layMain;
+		addView(layTopControls);
+		addView(layContentTop);
+		addView(layContent);
+		addView(layContentBottom);
+		addView(layBottomControls);
 	}
 
 	private View generateCalendarRow() {
 		LinearLayout layRow = createLayout(LinearLayout.HORIZONTAL);
 		for (int iDay = 0; iDay < 7; iDay++) {
-			DateWidgetDayCell dayCell = new DateWidgetDayCell(this, iDayCellSize, iDayCellSize);
+			DateWidgetDayCell dayCell = new DateWidgetDayCell(getContext(), iDayCellSize, iDayCellSize);
 			dayCell.setItemClick(mOnDayCellClick);
 			days.add(dayCell);
 			layRow.addView(dayCell);
@@ -268,7 +245,7 @@ public class DateWidget extends Activity {
 	private View generateCalendarHeader() {
 		LinearLayout layRow = createLayout(LinearLayout.HORIZONTAL);
 		for (int iDay = 0; iDay < 7; iDay++) {
-			DateWidgetDayHeader day = new DateWidgetDayHeader(this, iDayCellSize, iDayHeaderHeight);
+			DateWidgetDayHeader day = new DateWidgetDayHeader(getContext(), iDayCellSize, iDayHeaderHeight);
 			final int iWeekDay = DayStyle.getWeekDay(iDay, iFirstDayOfWeek);
 			day.setData(iWeekDay);
 			layRow.addView(day);
@@ -379,6 +356,7 @@ public class DateWidget extends Activity {
 	}
 
 	private void UpdateCurrentMonthDisplay() {
+		curMonth.setTimeInMillis(calStartDate.getTimeInMillis());
 		String s = dateMonth.format(calStartDate.getTime());
 		btnToday.setText(s);
 	}
@@ -426,7 +404,9 @@ public class DateWidget extends Activity {
 			calSelected.setTimeInMillis(item.getDate().getTimeInMillis());
 			item.setSelected(true);
 			updateControlsState();
-			OnClose();
+			if (listener != null) {
+				listener.onDateSelected(CalendarView.this);
+			}
 		}
 	};
 
@@ -435,9 +415,9 @@ public class DateWidget extends Activity {
 		btnNone.setEnabled(bDaySelected);
 		if (bDaySelected) {
 			String s = dateFull.format(calSelected.getTime());
-			setTitle(sStrSelected + " " + s);
+			//setTitle(sStrSelected + " " + s); // TODO
 		} else {
-			setTitle(sStrSelect);
+			//setTitle(sStrSelect); // TODO
 		}
 	}
 
@@ -451,15 +431,11 @@ public class DateWidget extends Activity {
 		layContent.invalidate();
 	}
 
-	public void OnClose() {
-		Bundle data = new Bundle();
-		data.putLong("date", calSelected.getTimeInMillis());
-
-		Intent intentData = new Intent("");
-		intentData.putExtras(data);
-		setResult(RESULT_OK, intentData);
-
-		this.finish();
+	public void setCalendarListener(CalendarListener listener) {
+		this.listener = listener;
 	}
 
+	public Calendar getSelectedValue() {
+		return calSelected;
+	}
 }

@@ -3,10 +3,12 @@
 	<string name="app_name">Medobs</string>
 	<string name="label_select_place">Select place</string>
 	<string name="label_settings">Settings</string>
-	
+
 	<string name="label_server_url">Server URL</string>
 	<string name="server_url_summary">URL server address</string>
 	<string name="label_username">Username</string>
 	<string name="label_password">Password</string>
+
 	<string name="msg_login_failed">Login to server was not successful. Check your login credentials.</string>
+	<string name="msg_server_url_not_configured">Server URL address is not configured.</string>
 </resources>

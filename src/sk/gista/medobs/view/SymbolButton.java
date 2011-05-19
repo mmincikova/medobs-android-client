@@ -1,4 +1,4 @@
-package sk.gista.medobs.widget;
+package sk.gista.medobs.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
