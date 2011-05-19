@@ -141,6 +141,9 @@ public class Medobs extends Activity implements CalendarListener {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		case R.id.menu_refresh:
+			fetchReservations();
+			return true;
 		case R.id.menu_select_place:
 			showDialog(PLACES_DIALOG);
 			return true;
@@ -163,7 +166,6 @@ public class Medobs extends Activity implements CalendarListener {
 
 	private void fetchReservations() {
 		if (currentPlace != null && client != null && !client.isExecuting()) {
-			System.out.println("execute");
 			new FetchReservationsTask().execute(null);
 		}
 	}
