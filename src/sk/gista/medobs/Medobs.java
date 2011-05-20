@@ -383,7 +383,7 @@ public class Medobs extends Activity implements CalendarListener {
 		@Override
 		protected String doInBackground(Object... params) {
 			String content = null;
-			if (client != null && places == null) {
+			if (client != null) {
 				HttpResponse resp = null;
 				try {
 					resp = client.httpGet("/places/");
@@ -420,12 +420,15 @@ public class Medobs extends Activity implements CalendarListener {
 					}
 				}  catch (JSONException e) {
 					e.printStackTrace();
+					showMessage(R.string.msg_bad_response_error);
 				}
 				if (currentPlace == null && places.size() > 0) {
 					setCurrentPlace(places.get(0));
 				}
 				fetchReservations();
 				new FetchDaysTask().execute(calendar);
+			} else {
+				showMessage(R.string.msg_http_error);
 			}
 			progressBar.setVisibility(View.INVISIBLE);
 		}
@@ -445,7 +448,7 @@ public class Medobs extends Activity implements CalendarListener {
 		@Override
 		protected String doInBackground(Object ... params) {
 			String content = null;
-			if (client != null) {
+			if (client != null && currentPlace != null) {
 				String date = requestDateFormat.format(calendar.getTime());
 				HttpResponse resp = null;
 				try {
@@ -506,17 +509,19 @@ public class Medobs extends Activity implements CalendarListener {
 		@Override
 		protected String doInBackground(Calendar... params) {
 			String content = null;
-			HttpResponse resp = null;
-			String date = dateFormat.format(params[0].getTime());
-			try {
-				resp = client.httpGet("/days_status/"+date+"/"+currentPlace.getId()+"/");
-				if (resp.getStatusLine().getStatusCode() < 400) {
-					content = readInputStream(resp.getEntity().getContent());
+			if (client != null && currentPlace != null) {
+				HttpResponse resp = null;
+				String date = dateFormat.format(params[0].getTime());
+				try {
+					resp = client.httpGet("/days_status/"+date+"/"+currentPlace.getId()+"/");
+					if (resp != null && resp.getStatusLine().getStatusCode() < 400) {
+						content = readInputStream(resp.getEntity().getContent());
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} finally {
+					client.closeResponse(resp);
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				client.closeResponse(resp);
 			}
 			return content;
 		}
