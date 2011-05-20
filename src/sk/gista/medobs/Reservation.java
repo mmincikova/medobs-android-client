@@ -31,11 +31,14 @@ public class Reservation {
 	private String time;
 	private Status status;
 	private String patient;
+	private String patientPhoneNumber;
+	private String patientEmail;
 	
-	public Reservation(String time, Status status, String patient) {
+	public Reservation(String time, Status status, String patient, String patientPhoneNumber) {
 		this.time = time;
 		this.status = status;
 		this.patient = patient;
+		this.patientPhoneNumber = patientPhoneNumber;
 	}
 
 	public String getTime() {
@@ -48,5 +51,9 @@ public class Reservation {
 
 	public String getpatient() {
 		return patient;
+	}
+
+	public String getPatientPhoneNumber() {
+		return patientPhoneNumber;
 	}
 }

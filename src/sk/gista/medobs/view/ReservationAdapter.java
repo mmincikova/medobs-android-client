@@ -40,7 +40,13 @@ public class ReservationAdapter extends ArrayAdapter<Reservation>{
 		TextView patientText = (TextView) view.findViewById(R.id.patient);
 		Reservation reservation = getItem(position);
 		timeText.setText(reservation.getTime());
-		patientText.setText(reservation.getpatient());
+		String phoneNum = reservation.getPatientPhoneNumber();
+		if (phoneNum.length() > 0) {
+			patientText.setText(reservation.getpatient()+" ("+reservation.getPatientPhoneNumber()+")");
+		} else {
+			patientText.setText(reservation.getpatient());
+		}
+		
 		System.out.println(reservation.getStatus().numCode);
 		view.setBackgroundColor(colors[reservation.getStatus().numCode]);
 		return view;
