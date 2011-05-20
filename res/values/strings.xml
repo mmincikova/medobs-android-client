@@ -14,4 +14,8 @@
 	<string name="msg_server_url_not_configured">Server URL address is not configured.</string>
 	<string name="msg_http_error">Http connection error occurred.</string>
 	<string name="msg_bad_response_error">Http connection error occurred.</string>
+	
+	<string name="about_contact">(c) 2011 Gista s.r.o.\ne-mail: info@gista.sk\nwww.gista.sk</string>
+	<string name="about_app_subtitle">Medobs application for Android</string>
+	<string name="label_about">About</string>
 </resources>

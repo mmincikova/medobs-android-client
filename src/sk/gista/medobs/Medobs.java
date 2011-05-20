@@ -26,6 +26,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -43,6 +45,8 @@ import android.widget.Toast;
 
 public class Medobs extends Activity implements CalendarListener {
 
+	public static String VERSION;
+	
 	private static final String SERVER_URL_SETTING = "server_url";
 	private static final String USERNAME_SETTING = "username";
 	private static final String PASSWORD_SETTING = "password";
@@ -50,6 +54,7 @@ public class Medobs extends Activity implements CalendarListener {
 	
 	private static final int PLACES_DIALOG = 0;
 	private static final int CALENDAR_DIALOG = 1;
+	private static final int ABOUT_DIALOG = 2;
 
 	private static final Object NO_PARAM = null;
 	
@@ -75,6 +80,11 @@ public class Medobs extends Activity implements CalendarListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		try {
+			VERSION = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_META_DATA).versionName;
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		}
 		prefferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		reservationsView = (ListView) findViewById(R.id.reservations_list);
@@ -206,6 +216,9 @@ public class Medobs extends Activity implements CalendarListener {
 			reservationsView.setAdapter(null);
 			startActivity(new Intent(this, Settings.class));
 			return true;
+		case R.id.menu_about:
+			showDialog(ABOUT_DIALOG);
+			return true;
 		}
 		return false;
 	}
@@ -328,6 +341,11 @@ public class Medobs extends Activity implements CalendarListener {
 					new FetchDaysTask().execute(calendar);
 				}
 			});
+			break;
+		case ABOUT_DIALOG:
+			dialog = new AboutDialog(this);
+			dialog.setTitle(R.string.label_about);
+			break;
 		}
 		return dialog;
 	}
