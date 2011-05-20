@@ -7,8 +7,9 @@
 	<ListView
 		android:id="@+id/reservations_list"
 		android:layout_width="fill_parent"
-	    android:layout_height="fill_parent">
-	</ListView>
+	    android:layout_height="fill_parent"
+	    android:layout_above="@+id/date_picker"
+	/>
 	<ImageButton
 		android:id="@+id/prev_day"
 		android:layout_width="wrap_content"
@@ -22,6 +23,7 @@
 	   	android:background="#00000000"
 	/>
 	<LinearLayout
+		android:id="@+id/date_picker"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true"
@@ -41,6 +43,7 @@
 			android:layout_height="wrap_content"
 			android:src="@android:drawable/ic_menu_my_calendar"
 			android:background="#00000000"
+			android:clickable="false"
 		/>
 	</LinearLayout>
 	<ImageButton

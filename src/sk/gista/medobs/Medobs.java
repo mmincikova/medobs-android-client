@@ -66,6 +66,7 @@ public class Medobs extends Activity implements CalendarListener {
 	private ImageButton prevDayButton;
 	private ImageButton nextDayButton;
 	private ProgressBar progressBar;
+	private View datePickerView;
 	
 	private CalendarView calendarView;
 	private ProgressBar calendarProgressBar;
@@ -82,6 +83,7 @@ public class Medobs extends Activity implements CalendarListener {
 		prevDayButton = (ImageButton) findViewById(R.id.prev_day);
 		nextDayButton = (ImageButton) findViewById(R.id.next_day);
 		progressBar = (ProgressBar) findViewById(R.id.progress_bar);
+		datePickerView = findViewById(R.id.date_picker);
 		
 		calendar = Calendar.getInstance();
 		
@@ -138,7 +140,7 @@ public class Medobs extends Activity implements CalendarListener {
 			}
 		});
 
-		showCalendarButton.setOnClickListener(new View.OnClickListener() {
+		datePickerView.setOnClickListener(new View.OnClickListener() {
 			private Runnable postAction = new Runnable() {
 				
 				@Override
