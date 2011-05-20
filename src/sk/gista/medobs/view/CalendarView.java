@@ -57,12 +57,12 @@ public class CalendarView extends LinearLayout {
 
 	public CalendarView(Context context) {
 		super(context);
-		init(Calendar.getInstance(), Calendar.SUNDAY, true);
+		init(Calendar.getInstance(), Calendar.MONDAY, false);
 	}
 
 	public CalendarView(Context context, AttributeSet attribs) {
 		super(context, attribs);
-		init(Calendar.getInstance(), Calendar.SUNDAY, true);
+		init(Calendar.getInstance(), Calendar.MONDAY, false);
 	}
 
 	public CalendarView(Context context, Calendar calendar, int firstDayOfWeek, boolean noneButton) {

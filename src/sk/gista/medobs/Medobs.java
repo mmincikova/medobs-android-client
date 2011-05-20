@@ -68,6 +68,7 @@ public class Medobs extends Activity implements CalendarListener {
 	private ProgressBar progressBar;
 	
 	private CalendarView calendarView;
+	private ProgressBar calendarProgressBar;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -258,7 +259,9 @@ public class Medobs extends Activity implements CalendarListener {
 		case CALENDAR_DIALOG:
 			dialog = new Dialog(this);
 			dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-			calendarView = new CalendarView(this, calendar, Calendar.MONDAY, false);
+			View view = getLayoutInflater().inflate(R.layout.calendar, null);
+			calendarView = (CalendarView) view.findViewById(R.id.calendar);
+			calendarProgressBar = (ProgressBar) view.findViewById(R.id.calendar_progress_bar);
 			// override default button actions, so we can move on prev/next month
 			// after getting enabled/disabled days
 			calendarView.setOnPrevMonthListener(new View.OnClickListener() {
@@ -266,6 +269,7 @@ public class Medobs extends Activity implements CalendarListener {
 				private Runnable postAction = new Runnable() {
 					@Override
 					public void run() {
+						calendarProgressBar.setVisibility(View.INVISIBLE);
 						calendarView.setPrevViewItem();
 					}
 				};
@@ -274,6 +278,7 @@ public class Medobs extends Activity implements CalendarListener {
 					cal.setTimeInMillis(calendarView.getCurrentMonth().getTimeInMillis());
 					cal.add(Calendar.MONTH, -1);
 					activeDays = null;
+					calendarProgressBar.setVisibility(View.VISIBLE);
 					new FetchDaysTask(postAction).execute(cal);
 				}
 			});
@@ -282,6 +287,7 @@ public class Medobs extends Activity implements CalendarListener {
 				private Runnable postAction = new Runnable() {
 					@Override
 					public void run() {
+						calendarProgressBar.setVisibility(View.INVISIBLE);
 						calendarView.setNextViewItem();
 					}
 				};
@@ -290,13 +296,14 @@ public class Medobs extends Activity implements CalendarListener {
 					cal.setTimeInMillis(calendarView.getCurrentMonth().getTimeInMillis());
 					cal.add(Calendar.MONTH, 1);
 					activeDays = null;
+					calendarProgressBar.setVisibility(View.VISIBLE);
 					new FetchDaysTask(postAction).execute(cal);
 				}
 			});
 			if (activeDays != null) {
 				calendarView.setEnabledDays(activeDays);
 			}
-			dialog.setContentView(calendarView);
+			dialog.setContentView(view);
 			calendarView.setCalendarListener(this);
 			dialog.setOnDismissListener(new Dialog.OnDismissListener() {
 				
