@@ -47,9 +47,11 @@ public class Medobs extends Activity implements CalendarListener {
 	private static final String USERNAME_SETTING = "username";
 	private static final String PASSWORD_SETTING = "password";
 	private static final String PLACE_SETTING = "place";
-
+	
 	private static final int PLACES_DIALOG = 0;
 	private static final int CALENDAR_DIALOG = 1;
+
+	private static final Object NO_PARAM = null;
 	
 	private SharedPreferences prefferences;
 	private Client client;
@@ -157,20 +159,13 @@ public class Medobs extends Activity implements CalendarListener {
 		if (client == null) {
 			String url = prefferences.getString(SERVER_URL_SETTING, "");
 			if (url.length() > 7) {
-				String username = prefferences.getString(USERNAME_SETTING, "");
-				String password = prefferences.getString(PASSWORD_SETTING, "");
 				client = new Client(url);
-				if (!client.login(username, password)) {
-					showMessage(R.string.msg_login_failed);
-					return;
-				}
+				new LoginTask().execute(NO_PARAM);
 			} else {
 				showMessage(R.string.msg_server_url_not_configured);
 				return;
 			}
 		}
-		new FetchPlacesTask().execute(null);
-		
 	}
 
 	@Override
@@ -211,7 +206,7 @@ public class Medobs extends Activity implements CalendarListener {
 	private void fetchReservations() {
 		//if (currentPlace != null && client != null && !client.isExecuting()) {
 		if (currentPlace != null && client != null) {
-			new FetchReservationsTask().execute(null);
+			new FetchReservationsTask().execute(NO_PARAM);
 		}
 	}
 
@@ -548,6 +543,33 @@ public class Medobs extends Activity implements CalendarListener {
 				}
 			} else {
 				showMessage(R.string.msg_http_error);
+			}
+		}
+	}
+
+	class LoginTask extends AsyncTask<Object, Integer, Boolean> {
+		private String username;
+		private String password;
+
+		@Override
+		protected void onPreExecute() {
+			progressBar.setVisibility(View.VISIBLE);
+			username = prefferences.getString(USERNAME_SETTING, "");
+			password = prefferences.getString(PASSWORD_SETTING, "");
+		}
+
+		@Override
+		protected Boolean doInBackground(Object... params) {
+			return client.login(username, password);
+		}
+
+		@Override
+		protected void onPostExecute(Boolean result) {
+			progressBar.setVisibility(View.INVISIBLE);
+			if (result) {
+				new FetchPlacesTask().execute(NO_PARAM);
+			} else {
+				showMessage(R.string.msg_login_failed);
 			}
 		}
 	}
