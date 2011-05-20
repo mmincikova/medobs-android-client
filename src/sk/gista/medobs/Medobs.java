@@ -186,6 +186,7 @@ public class Medobs extends Activity implements CalendarListener {
 		switch (item.getItemId()) {
 		case R.id.menu_refresh:
 			fetchReservations();
+			new FetchDaysTask().execute(calendar);
 			return true;
 		case R.id.menu_select_place:
 			showDialog(PLACES_DIALOG);
