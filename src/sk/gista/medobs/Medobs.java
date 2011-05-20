@@ -136,11 +136,17 @@ public class Medobs extends Activity implements CalendarListener {
 		});
 
 		showCalendarButton.setOnClickListener(new View.OnClickListener() {
-			
+			private Runnable postAction = new Runnable() {
+				
+				@Override
+				public void run() {
+					showDialog(CALENDAR_DIALOG);
+				}
+			};
 			@Override
 			public void onClick(View v) {
-				showDialog(CALENDAR_DIALOG);
-				new FetchDaysTask().execute(calendar);
+				activeDays = null;
+				new FetchDaysTask(postAction).execute(calendar);
 			}
 		});
 	}
@@ -257,8 +263,54 @@ public class Medobs extends Activity implements CalendarListener {
 			dialog = new Dialog(this);
 			dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 			calendarView = new CalendarView(this, calendar, Calendar.MONDAY, false);
+			// override default button actions, so we can move on prev/next month
+			// after getting enabled/disabled days
+			calendarView.setOnPrevMonthListener(new View.OnClickListener() {
+				private Calendar cal = Calendar.getInstance();
+				private Runnable postAction = new Runnable() {
+					@Override
+					public void run() {
+						calendarView.setPrevViewItem();
+					}
+				};
+				@Override
+				public void onClick(View v) {
+					cal.setTimeInMillis(calendarView.getCurrentMonth().getTimeInMillis());
+					cal.add(Calendar.MONTH, -1);
+					activeDays = null;
+					new FetchDaysTask(postAction).execute(cal);
+				}
+			});
+			calendarView.setOnNextMonthListener(new View.OnClickListener() {
+				private Calendar cal = Calendar.getInstance();
+				private Runnable postAction = new Runnable() {
+					@Override
+					public void run() {
+						calendarView.setNextViewItem();
+					}
+				};
+				@Override
+				public void onClick(View v) {
+					cal.setTimeInMillis(calendarView.getCurrentMonth().getTimeInMillis());
+					cal.add(Calendar.MONTH, 1);
+					activeDays = null;
+					new FetchDaysTask(postAction).execute(cal);
+				}
+			});
+			if (activeDays != null) {
+				calendarView.setEnabledDays(activeDays);
+			}
 			dialog.setContentView(calendarView);
 			calendarView.setCalendarListener(this);
+			dialog.setOnDismissListener(new Dialog.OnDismissListener() {
+				
+				@Override
+				public void onDismiss(DialogInterface dialog) {
+					activeDays = null;
+					fetchReservations();
+					new FetchDaysTask().execute(calendar);
+				}
+			});
 		}
 		return dialog;
 	}
@@ -266,24 +318,31 @@ public class Medobs extends Activity implements CalendarListener {
 	@Override
 	protected void onPrepareDialog(int id, Dialog dialog) {
 		super.onPrepareDialog(id, dialog);
-		if (id == PLACES_DIALOG && places != null) {
-			AlertDialog layersDialog = (AlertDialog) dialog;
-			
-			String[] items = new String[places.size()];
-			int selectedItem = -1;
-			for (int i = 0; i < places.size(); i++) {
-				items[i] = places.get(i).getName();
-				if (currentPlace != null && currentPlace.getId() == places.get(i).getId()) {
-					selectedItem = i;
+		switch (id) {
+		case PLACES_DIALOG: 
+			if (places != null) {
+				AlertDialog layersDialog = (AlertDialog) dialog;
+				
+				String[] items = new String[places.size()];
+				int selectedItem = -1;
+				for (int i = 0; i < places.size(); i++) {
+					items[i] = places.get(i).getName();
+					if (currentPlace != null && currentPlace.getId() == places.get(i).getId()) {
+						selectedItem = i;
+					}
+				}
+				ListView list = layersDialog.getListView();
+				list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+				
+				layersDialog.getListView().setAdapter(new ArrayAdapter<String>(this, R.layout.simple_list_item_single_choice, items));
+				if (selectedItem != -1) {
+					list.setItemChecked(selectedItem, true);
 				}
 			}
-			ListView list = layersDialog.getListView();
-			list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-			
-			layersDialog.getListView().setAdapter(new ArrayAdapter<String>(this, R.layout.simple_list_item_single_choice, items));
-			if (selectedItem != -1) {
-				list.setItemChecked(selectedItem, true);
-			}
+			break;
+		case CALENDAR_DIALOG:
+			calendarView.setSelectedDate(calendar);
+			break;
 		}
 	}
 
@@ -428,6 +487,13 @@ public class Medobs extends Activity implements CalendarListener {
 	private class FetchDaysTask extends AsyncTask<Calendar, Integer, String> {
 
 		private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM");
+		private Runnable postAction;
+
+		public FetchDaysTask() {}
+		
+		public FetchDaysTask(Runnable postAction) {
+			this.postAction = postAction;
+		}
 
 		@Override
 		protected void onPreExecute() {
@@ -470,9 +536,11 @@ public class Medobs extends Activity implements CalendarListener {
 					Collections.sort(enabledDays);
 					activeDays = enabledDays;
 					if (calendarView != null) {
-						calendarView.setEnabledDays(enabledDays);
+						calendarView.setEnabledDays(activeDays);
 					}
-					
+					if (postAction != null) {
+						postAction.run();
+					}
 				} catch (JSONException e) {
 					e.printStackTrace();
 					showMessage(R.string.msg_bad_response_error);

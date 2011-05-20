@@ -57,27 +57,26 @@ public class CalendarView extends LinearLayout {
 
 	public CalendarView(Context context) {
 		super(context);
-		onCreate(Calendar.getInstance(), Calendar.SUNDAY, true);
+		init(Calendar.getInstance(), Calendar.SUNDAY, true);
 	}
 
 	public CalendarView(Context context, AttributeSet attribs) {
 		super(context, attribs);
-		onCreate(Calendar.getInstance(), Calendar.SUNDAY, true);
+		init(Calendar.getInstance(), Calendar.SUNDAY, true);
 	}
 
 	public CalendarView(Context context, Calendar calendar, int firstDayOfWeek, boolean noneButton) {
 		super(context);
-		onCreate(calendar, firstDayOfWeek, noneButton);
+		init(calendar, firstDayOfWeek, noneButton);
 	}
 
 	// methods
-	public void onCreate(Calendar calendar, int firstDayOfWeek, boolean noneButton) {
+	private final void init(Calendar calendar, int firstDayOfWeek, boolean noneButton) {
 		
 		// init calendar to defaults
 		calSelected = calendar;
 		iFirstDayOfWeek = firstDayOfWeek;
 		bNoneButton = noneButton;
-
 		generateContentView();
 
 		// initialize
@@ -128,7 +127,7 @@ public class CalendarView extends LinearLayout {
 		return label;
 	}
 
-	public void generateTopButtons(LinearLayout layTopControls) {
+	private void generateTopButtons(LinearLayout layTopControls) {
 		final int iHorPadding = 24;
 		final int iSmallButtonWidth = 60;
 
@@ -138,11 +137,11 @@ public class CalendarView extends LinearLayout {
 		btnToday.setPadding(iHorPadding, btnToday.getPaddingTop(), iHorPadding, btnToday.getPaddingBottom());
 		btnToday.setBackgroundResource(android.R.drawable.btn_default_small);
 
-		SymbolButton btnPrev = new SymbolButton(getContext(), SymbolButton.symbol.arrowLeft);
+		btnPrev = new SymbolButton(getContext(), SymbolButton.symbol.arrowLeft);
 		btnPrev.setLayoutParams(new LayoutParams(iSmallButtonWidth, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
 		btnPrev.setBackgroundResource(android.R.drawable.btn_default_small);
 
-		SymbolButton btnNext = new SymbolButton(getContext(), SymbolButton.symbol.arrowRight);
+		btnNext = new SymbolButton(getContext(), SymbolButton.symbol.arrowRight);
 		btnNext.setLayoutParams(new LayoutParams(iSmallButtonWidth, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
 		btnNext.setBackgroundResource(android.R.drawable.btn_default_small);
 
@@ -441,6 +440,24 @@ public class CalendarView extends LinearLayout {
 
 	public void setEnabledDays(List<Integer> enabledDays) {
 		this.enabledDays = enabledDays;
+		updateCalendar();
+	}
+
+	public void setOnPrevMonthListener(View.OnClickListener listener) {
+		btnPrev.setOnClickListener(listener);
+	}
+
+	public void setOnNextMonthListener(View.OnClickListener listener) {
+		btnNext.setOnClickListener(listener);
+	}
+
+	public Calendar getCurrentMonth() {
+		return curMonth;
+	}
+
+	public void setSelectedDate(Calendar calendar) {
+		calSelected = calendar;
+		calStartDate = getCalendarStartDate();
 		updateCalendar();
 	}
 }
