@@ -369,14 +369,14 @@ public class Medobs extends Activity implements CalendarListener {
 		}
 	}
 
+	private static SimpleDateFormat labelDateFormat = new SimpleDateFormat("d MMMM yyyy");
+	private static SimpleDateFormat requestDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	
 	private class FetchReservationsTask extends AsyncTask<Object, Integer, String> {
-
-		private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
 		@Override
 		protected void onPreExecute() {
-			String date = dateFormat.format(calendar.getTime());
-			selectedDateView.setText(date);
+			selectedDateView.setText(labelDateFormat.format(calendar.getTime()));
 			progressBar.setVisibility(View.VISIBLE);
 		}
 
@@ -384,7 +384,7 @@ public class Medobs extends Activity implements CalendarListener {
 		protected String doInBackground(Object ... params) {
 			String content = null;
 			if (client != null) {
-				String date = dateFormat.format(calendar.getTime());
+				String date = requestDateFormat.format(calendar.getTime());
 				HttpResponse resp = null;
 				try {
 					resp = client.httpGet("/reservations/"+date+"/"+currentPlace.getId()+"/");
