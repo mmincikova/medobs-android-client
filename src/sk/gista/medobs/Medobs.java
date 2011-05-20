@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -50,13 +51,12 @@ public class Medobs extends Activity implements CalendarListener {
 	private static final int PLACES_DIALOG = 0;
 	private static final int CALENDAR_DIALOG = 1;
 	
-	//private static final String URL = "http://medobs.tag.sk";
-	//private static final String URL = "http://10.0.2.2:8000";
+	private SharedPreferences prefferences;
 	private Client client;
 	private Calendar calendar;
 	private List<Place> places;
 	private Place currentPlace;
-	private SharedPreferences prefferences;
+	private List<Integer> activeDays; //in current month
 	
 	private ListView reservationsView;
 	private TextView selectedDateView;
@@ -86,7 +86,24 @@ public class Medobs extends Activity implements CalendarListener {
 			
 			@Override
 			public void onClick(View v) {
-				calendar.add(Calendar.DAY_OF_MONTH, -1);
+				int step = -1;
+				if (activeDays != null) {
+					int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
+					for (int i : activeDays) {
+						if (i >= currentDay) {
+							break;
+						}
+						step = i-currentDay;
+					}
+					if (!activeDays.contains(currentDay+step)) {
+						// move to last day of previous month
+						calendar.add(Calendar.DAY_OF_MONTH, -currentDay);
+						activeDays = null;
+						new FetchDaysTask().execute(calendar);
+						step = 0;
+					}
+				}
+				calendar.add(Calendar.DAY_OF_MONTH, step);
 				fetchReservations();
 			}
 		});
@@ -95,7 +112,25 @@ public class Medobs extends Activity implements CalendarListener {
 			
 			@Override
 			public void onClick(View v) {
-				calendar.add(Calendar.DAY_OF_MONTH, 1);
+				int step = 1;
+				if (activeDays != null) {
+					int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
+					for (int i : activeDays) {
+						if (i > currentDay) {
+							step = i-currentDay;
+							break;
+						}
+					}
+					if (!activeDays.contains(currentDay+step)) {
+						// set to first day of next month
+						calendar.add(Calendar.MONTH, 1);
+						calendar.set(Calendar.DAY_OF_MONTH, 1);
+						activeDays = null;
+						new FetchDaysTask().execute(calendar);
+						step = 0;
+					}
+				}
+				calendar.add(Calendar.DAY_OF_MONTH, step);
 				fetchReservations();
 			}
 		});
@@ -104,7 +139,8 @@ public class Medobs extends Activity implements CalendarListener {
 			
 			@Override
 			public void onClick(View v) {
-				new FetchDaysRask().execute(calendar);
+				showDialog(CALENDAR_DIALOG);
+				new FetchDaysTask().execute(calendar);
 			}
 		});
 	}
@@ -128,6 +164,7 @@ public class Medobs extends Activity implements CalendarListener {
 			}
 		}
 		new FetchPlacesTask().execute(null);
+		
 	}
 
 	@Override
@@ -165,7 +202,8 @@ public class Medobs extends Activity implements CalendarListener {
 	}
 
 	private void fetchReservations() {
-		if (currentPlace != null && client != null && !client.isExecuting()) {
+		//if (currentPlace != null && client != null && !client.isExecuting()) {
+		if (currentPlace != null && client != null) {
 			new FetchReservationsTask().execute(null);
 		}
 	}
@@ -325,6 +363,7 @@ public class Medobs extends Activity implements CalendarListener {
 					setCurrentPlace(places.get(0));
 				}
 				fetchReservations();
+				new FetchDaysTask().execute(calendar);
 			}
 			progressBar.setVisibility(View.INVISIBLE);
 		}
@@ -386,7 +425,7 @@ public class Medobs extends Activity implements CalendarListener {
 		}
 	}
 
-	private class FetchDaysRask extends AsyncTask<Calendar, Integer, String> {
+	private class FetchDaysTask extends AsyncTask<Calendar, Integer, String> {
 
 		private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM");
 
@@ -428,8 +467,12 @@ public class Medobs extends Activity implements CalendarListener {
 							enabledDays.add(Integer.parseInt(date.substring(date.lastIndexOf('-')+1)));
 						}
 					}
-					showDialog(CALENDAR_DIALOG);
-					calendarView.setEnabledDays(enabledDays);
+					Collections.sort(enabledDays);
+					activeDays = enabledDays;
+					if (calendarView != null) {
+						calendarView.setEnabledDays(enabledDays);
+					}
+					
 				} catch (JSONException e) {
 					e.printStackTrace();
 					showMessage(R.string.msg_bad_response_error);
@@ -444,15 +487,17 @@ public class Medobs extends Activity implements CalendarListener {
 	public void onMonthChanged(CalendarView calendarView, Calendar value) {
 		//System.out.println("onMonthChanged: "+value.getTime());
 		if (client != null && client.isExecuting()) {
-			client.cancelCurrentRequest();
+			//client.cancelCurrentRequest();
 		}
-		new FetchDaysRask().execute(value);
+		activeDays = null;
+		new FetchDaysTask().execute(value);
 	}
 
 	@Override
 	public void onDateSelected(CalendarView calendarView) {
 		dismissDialog(CALENDAR_DIALOG);
 		calendar = calendarView.getSelectedValue();
+		activeDays = null;
 		fetchReservations();
 	}
 }
