@@ -320,24 +320,24 @@ public class Medobs extends Activity implements CalendarListener {
 		super.onPrepareDialog(id, dialog);
 		switch (id) {
 		case PLACES_DIALOG: 
+			AlertDialog placesDialog = (AlertDialog) dialog;
+			String[] items = {};
+			int selectedItem = -1;
 			if (places != null) {
-				AlertDialog layersDialog = (AlertDialog) dialog;
-				
-				String[] items = new String[places.size()];
-				int selectedItem = -1;
+				items = new String[places.size()];
 				for (int i = 0; i < places.size(); i++) {
 					items[i] = places.get(i).getName();
 					if (currentPlace != null && currentPlace.getId() == places.get(i).getId()) {
 						selectedItem = i;
 					}
 				}
-				ListView list = layersDialog.getListView();
-				list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-				
-				layersDialog.getListView().setAdapter(new ArrayAdapter<String>(this, R.layout.simple_list_item_single_choice, items));
-				if (selectedItem != -1) {
-					list.setItemChecked(selectedItem, true);
-				}
+			}
+			ListView list = placesDialog.getListView();
+			list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+			
+			placesDialog.getListView().setAdapter(new ArrayAdapter<String>(this, R.layout.simple_list_item_single_choice, items));
+			if (selectedItem != -1) {
+				list.setItemChecked(selectedItem, true);
 			}
 			break;
 		case CALENDAR_DIALOG:
