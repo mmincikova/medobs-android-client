@@ -181,16 +181,28 @@ public class Medobs extends Activity implements CalendarListener {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_refresh:
-			fetchReservations();
-			new FetchDaysTask().execute(calendar);
+			if (client == null) {
+				showMessage(R.string.msg_server_url_not_configured);
+			} else {
+				if (client.isLoggedIn()) {
+					fetchReservations();
+					new FetchDaysTask().execute(calendar);
+				} else {
+					new LoginTask().execute(NO_PARAM);
+				}
+			}
 			return true;
 		case R.id.menu_select_place:
 			showDialog(PLACES_DIALOG);
 			return true;
 		case R.id.menu_settings:
 			saveState();
-			startActivity(new Intent(this, Settings.class));
 			places = null;
+			activeDays = null;
+			client.cancelCurrentRequest();
+			client = null;
+			reservationsView.setAdapter(null);
+			startActivity(new Intent(this, Settings.class));
 			return true;
 		}
 		return false;

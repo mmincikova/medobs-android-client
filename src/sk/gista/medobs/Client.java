@@ -29,6 +29,7 @@ public class Client {
 	private String serverUrl;
 	protected HttpClient client;
 	private HttpUriRequest currentRequest;
+	private boolean isLogged;
 	
 	public Client(String serverUrl) {
 		this.serverUrl = serverUrl;
@@ -51,7 +52,10 @@ public class Client {
 			loginRequest.setEntity(new UrlEncodedFormEntity(params, "utf-8"));
 			response = client.execute(loginRequest);
 			Log.i(TAG, "status: "+response.getStatusLine().getStatusCode());
-			return response.getStatusLine().getStatusCode() == 200;
+			if (response.getStatusLine().getStatusCode() == 200) {
+				isLogged = true;
+				return true;
+			}
 		} catch (UnsupportedEncodingException e) {
 			Log.e(TAG, "login into Gisplan failed", e);
 		} catch (Exception e) {
@@ -66,6 +70,9 @@ public class Client {
 		HttpResponse response = null;
 		try {
 			response = httpGet("/gisplandroid/logout/");
+			if (response.getStatusLine().getStatusCode() == 200) {
+				isLogged = false;
+			}
 		} catch (IOException e) {
 			Log.e(TAG, "logout from Gisplan failed", e);
 		} finally {
@@ -111,5 +118,9 @@ public class Client {
 			}
 		}
 		currentRequest = null;
+	}
+
+	public boolean isLoggedIn() {
+		return isLogged;
 	}
 }
