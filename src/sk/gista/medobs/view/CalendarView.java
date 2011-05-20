@@ -28,7 +28,7 @@ public class CalendarView extends LinearLayout {
 	private Calendar calToday = Calendar.getInstance();
 	private Calendar calCalendar = Calendar.getInstance();
 	private Calendar calSelected = Calendar.getInstance();
-	private Calendar curMonth = Calendar.getInstance();
+	private Calendar currentMonth = Calendar.getInstance();
 
 	private CalendarListener listener;
 	private List<Integer> enabledDays;
@@ -151,7 +151,7 @@ public class CalendarView extends LinearLayout {
 				enabledDays = null;
 				setPrevViewItem();
 				if (listener != null) {
-					listener.onMonthChanged(CalendarView.this, curMonth); // or iMonthViewCurrentMonth ?
+					listener.onMonthChanged(CalendarView.this, currentMonth); // or iMonthViewCurrentMonth ?
 				}
 			}
 		});
@@ -160,7 +160,7 @@ public class CalendarView extends LinearLayout {
 				enabledDays = null;
 				setTodayViewItem();
 				if (listener != null) {
-					listener.onMonthChanged(CalendarView.this, curMonth);
+					listener.onMonthChanged(CalendarView.this, currentMonth);
 				}
 			}
 		});
@@ -169,7 +169,7 @@ public class CalendarView extends LinearLayout {
 				enabledDays = null;
 				setNextViewItem();
 				if (listener != null) {
-					listener.onMonthChanged(CalendarView.this, curMonth);
+					listener.onMonthChanged(CalendarView.this, currentMonth);
 				}
 			}
 		});
@@ -355,7 +355,7 @@ public class CalendarView extends LinearLayout {
 	}
 
 	private void UpdateCurrentMonthDisplay() {
-		curMonth.setTimeInMillis(calStartDate.getTimeInMillis());
+		currentMonth.setTimeInMillis(calStartDate.getTimeInMillis());
 		String s = dateMonth.format(calStartDate.getTime());
 		btnToday.setText(s);
 	}
@@ -452,7 +452,7 @@ public class CalendarView extends LinearLayout {
 	}
 
 	public Calendar getCurrentMonth() {
-		return curMonth;
+		return currentMonth;
 	}
 
 	public void setSelectedDate(Calendar calendar) {
