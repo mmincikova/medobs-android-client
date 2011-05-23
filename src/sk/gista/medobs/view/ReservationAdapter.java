@@ -19,7 +19,7 @@ public class ReservationAdapter extends ArrayAdapter<Reservation>{
 		0, // empty
 		Color.parseColor("#939DAC"), //disabled
 		//Color.parseColor("#80B3FF"), //enabled
-		Color.parseColor("#AACCFF"), //enabled
+		Color.parseColor("#FFFFFF"), //enabled
 		Color.parseColor("#71C837"), //booked
 		Color.parseColor("#C83737")  //in held
 	};
@@ -47,7 +47,6 @@ public class ReservationAdapter extends ArrayAdapter<Reservation>{
 			patientText.setText(reservation.getpatient());
 		}
 		
-		System.out.println(reservation.getStatus().numCode);
 		view.setBackgroundColor(colors[reservation.getStatus().numCode]);
 		return view;
 	}
