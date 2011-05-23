@@ -58,6 +58,22 @@
 		android:src="@drawable/btn_next"
 		android:background="#00000000"
 	/>
+	<Button
+		android:id="@+id/calendar_bg"
+		android:layout_centerInParent="true"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:background="#99000000"
+		android:visibility="invisible"
+	/>
+	<sk.gista.medobs.view.CalendarView
+		android:id="@+id/calendar"
+		android:layout_centerInParent="true"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:background="#99999999"
+		android:visibility="invisible"
+	/>
 	<android.widget.ProgressBar
 		android:id="@+id/progress_bar"
 		android:layout_width="wrap_content"

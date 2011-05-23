@@ -35,7 +35,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.ScaleAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -53,8 +56,7 @@ public class Medobs extends Activity implements CalendarListener {
 	private static final String PLACE_SETTING = "place";
 	
 	private static final int PLACES_DIALOG = 0;
-	private static final int CALENDAR_DIALOG = 1;
-	private static final int ABOUT_DIALOG = 2;
+	private static final int ABOUT_DIALOG = 1;
 
 	private static final Object NO_PARAM = null;
 	
@@ -67,14 +69,12 @@ public class Medobs extends Activity implements CalendarListener {
 	
 	private ListView reservationsView;
 	private TextView selectedDateView;
-	private ImageButton showCalendarButton;
 	private ImageButton prevDayButton;
 	private ImageButton nextDayButton;
 	private ProgressBar progressBar;
 	private View datePickerView;
-	
+	private View calendarBg;
 	private CalendarView calendarView;
-	private ProgressBar calendarProgressBar;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -88,12 +88,13 @@ public class Medobs extends Activity implements CalendarListener {
 		prefferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		reservationsView = (ListView) findViewById(R.id.reservations_list);
-		showCalendarButton = (ImageButton) findViewById(R.id.show_calendar);
 		selectedDateView = (TextView) findViewById(R.id.selected_date_text);
 		prevDayButton = (ImageButton) findViewById(R.id.prev_day);
 		nextDayButton = (ImageButton) findViewById(R.id.next_day);
 		progressBar = (ProgressBar) findViewById(R.id.progress_bar);
 		datePickerView = findViewById(R.id.date_picker);
+		calendarBg = findViewById(R.id.calendar_bg);
+		calendarView = (CalendarView) findViewById(R.id.calendar);
 		
 		calendar = Calendar.getInstance();
 		
@@ -164,6 +165,49 @@ public class Medobs extends Activity implements CalendarListener {
 				new FetchDaysTask(postAction).execute(calendar);
 			}
 		});
+
+		// override default button actions, so we can move on prev/next month
+		// after getting enabled/disabled days
+		calendarView.setOnPrevMonthListener(new View.OnClickListener() {
+			private Calendar cal = Calendar.getInstance();
+			private Runnable postAction = new Runnable() {
+				@Override
+				public void run() {
+					progressBar.setVisibility(View.INVISIBLE);
+					calendarView.setPrevViewItem();
+				}
+			};
+			@Override
+			public void onClick(View v) {
+				cal.setTimeInMillis(calendarView.getCurrentMonth().getTimeInMillis());
+				cal.add(Calendar.MONTH, -1);
+				activeDays = null;
+				progressBar.setVisibility(View.VISIBLE);
+				new FetchDaysTask(postAction).execute(cal);
+			}
+		});
+		calendarView.setOnNextMonthListener(new View.OnClickListener() {
+			private Calendar cal = Calendar.getInstance();
+			private Runnable postAction = new Runnable() {
+				@Override
+				public void run() {
+					progressBar.setVisibility(View.INVISIBLE);
+					calendarView.setNextViewItem();
+				}
+			};
+			@Override
+			public void onClick(View v) {
+				cal.setTimeInMillis(calendarView.getCurrentMonth().getTimeInMillis());
+				cal.add(Calendar.MONTH, 1);
+				activeDays = null;
+				progressBar.setVisibility(View.VISIBLE);
+				new FetchDaysTask(postAction).execute(cal);
+			}
+		});
+		if (activeDays != null) {
+			calendarView.setEnabledDays(activeDays);
+		}
+		calendarView.setCalendarListener(this);
 	}
 
 	@Override
@@ -277,6 +321,7 @@ public class Medobs extends Activity implements CalendarListener {
 					if (which < places.size()) {
 						setCurrentPlace(places.get(which));
 						fetchReservations();
+						new FetchDaysTask().execute(calendar);
 					}
 				}
 			};
@@ -284,65 +329,6 @@ public class Medobs extends Activity implements CalendarListener {
 			builder.setTitle(R.string.label_select_place);
 			builder.setItems(new String[0], listener);
 			dialog = builder.create();
-			break;
-		case CALENDAR_DIALOG:
-			dialog = new Dialog(this);
-			dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-			View view = getLayoutInflater().inflate(R.layout.calendar, null);
-			calendarView = (CalendarView) view.findViewById(R.id.calendar);
-			calendarProgressBar = (ProgressBar) view.findViewById(R.id.calendar_progress_bar);
-			// override default button actions, so we can move on prev/next month
-			// after getting enabled/disabled days
-			calendarView.setOnPrevMonthListener(new View.OnClickListener() {
-				private Calendar cal = Calendar.getInstance();
-				private Runnable postAction = new Runnable() {
-					@Override
-					public void run() {
-						calendarProgressBar.setVisibility(View.INVISIBLE);
-						calendarView.setPrevViewItem();
-					}
-				};
-				@Override
-				public void onClick(View v) {
-					cal.setTimeInMillis(calendarView.getCurrentMonth().getTimeInMillis());
-					cal.add(Calendar.MONTH, -1);
-					activeDays = null;
-					calendarProgressBar.setVisibility(View.VISIBLE);
-					new FetchDaysTask(postAction).execute(cal);
-				}
-			});
-			calendarView.setOnNextMonthListener(new View.OnClickListener() {
-				private Calendar cal = Calendar.getInstance();
-				private Runnable postAction = new Runnable() {
-					@Override
-					public void run() {
-						calendarProgressBar.setVisibility(View.INVISIBLE);
-						calendarView.setNextViewItem();
-					}
-				};
-				@Override
-				public void onClick(View v) {
-					cal.setTimeInMillis(calendarView.getCurrentMonth().getTimeInMillis());
-					cal.add(Calendar.MONTH, 1);
-					activeDays = null;
-					calendarProgressBar.setVisibility(View.VISIBLE);
-					new FetchDaysTask(postAction).execute(cal);
-				}
-			});
-			if (activeDays != null) {
-				calendarView.setEnabledDays(activeDays);
-			}
-			dialog.setContentView(view);
-			calendarView.setCalendarListener(this);
-			dialog.setOnDismissListener(new Dialog.OnDismissListener() {
-				
-				@Override
-				public void onDismiss(DialogInterface dialog) {
-					activeDays = null;
-					fetchReservations();
-					new FetchDaysTask().execute(calendar);
-				}
-			});
 			break;
 		case ABOUT_DIALOG:
 			dialog = new AboutDialog(this);
@@ -377,9 +363,15 @@ public class Medobs extends Activity implements CalendarListener {
 				list.setItemChecked(selectedItem, true);
 			}
 			break;
-		case CALENDAR_DIALOG:
-			calendarView.setSelectedDate(calendar);
-			break;
+		}
+	}
+
+	@Override
+	public void onBackPressed() {
+		if (calendarView.getVisibility() == View.VISIBLE) {
+			hideCalendar();
+		} else {
+			super.onBackPressed();
 		}
 	}
 
@@ -389,13 +381,59 @@ public class Medobs extends Activity implements CalendarListener {
 				
 				@Override
 				public void run() {
-					showDialog(CALENDAR_DIALOG);
+					showCalendarAnimation();
 				}
 			}).execute(calendar);
 		} else {
-			showDialog(CALENDAR_DIALOG);
+			showCalendarAnimation();
 		}
 	}
+
+	private void showCalendarAnimation() {
+		calendarView.setSelectedDate(calendar);
+		calendarBg.setVisibility(View.VISIBLE);
+		calendarView.setVisibility(View.VISIBLE);
+		AnimationSet animation = new AnimationSet(true);
+		ScaleAnimation scaleAnim = new ScaleAnimation(0.7f, 1f, 0.7f, 1f, reservationsView.getWidth()/2, reservationsView.getHeight()/2);
+		AlphaAnimation alphaAnimation = new AlphaAnimation(0.1f, 1f);
+		animation.addAnimation(scaleAnim);
+		animation.addAnimation(alphaAnimation);
+		animation.setDuration(200);
+		AlphaAnimation bgAlphaAnimation = new AlphaAnimation(0.0f, 1f);
+		bgAlphaAnimation.setDuration(500);
+		calendarBg.startAnimation(bgAlphaAnimation);
+		calendarView.startAnimation(animation);
+	}
+
+	private void hideCalendar() {
+		ScaleAnimation scaleAnim = new ScaleAnimation(1f, 0.7f, 1f, 0.7f, reservationsView.getWidth()/2, reservationsView.getHeight()/2);
+		scaleAnim.setDuration(200);
+		AlphaAnimation bgAlphaAnimation = new AlphaAnimation(1f, 0);
+		bgAlphaAnimation.setDuration(200);
+		bgAlphaAnimation.setAnimationListener(new Animation.AnimationListener() {
+			
+			@Override
+			public void onAnimationStart(Animation animation) {
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+			}
+			
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				calendarBg.setVisibility(View.INVISIBLE);
+				calendarView.setVisibility(View.INVISIBLE);
+			}
+		});
+		calendarBg.startAnimation(bgAlphaAnimation);
+		calendarView.startAnimation(scaleAnim);
+		
+		activeDays = null;
+		fetchReservations();
+		new FetchDaysTask().execute(calendar);
+	}
+
 	private void setCurrentPlace(Place place) {
 		currentPlace = place;
 		if (currentPlace != null) {
@@ -644,7 +682,7 @@ public class Medobs extends Activity implements CalendarListener {
 
 	@Override
 	public void onDateSelected(CalendarView calendarView) {
-		dismissDialog(CALENDAR_DIALOG);
+		hideCalendar();
 		calendar = calendarView.getSelectedValue();
 		activeDays = null;
 		fetchReservations();
