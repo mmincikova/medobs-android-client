@@ -4,6 +4,7 @@ import java.util.List;
 
 import sk.gista.medobs.R;
 import sk.gista.medobs.Reservation;
+import sk.gista.medobs.Reservation.Status;
 import android.content.Context;
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -32,22 +33,42 @@ public class ReservationAdapter extends ArrayAdapter<Reservation>{
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
+		Reservation reservation = getItem(position);
 		View view = convertView;
 		if (view == null) {
-			view = inflater.inflate(R.layout.reservation_item, parent, false);
+			if (getItemViewType(position) == 1) { 
+				view = inflater.inflate(R.layout.reservation_booked_item, parent, false);
+				TextView phoneView = (TextView) view.findViewById(R.id.patient_phone);
+				TextView emailView = (TextView) view.findViewById(R.id.patient_email);
+				phoneView.setText("Phone: "+reservation.getPatientPhoneNumber());
+				if (reservation.getPatientEmail().length() > 0) {
+					emailView.setText("Email: "+reservation.getPatientEmail());
+					emailView.setVisibility(View.VISIBLE);
+				} else {
+					emailView.setVisibility(View.GONE);
+				}
+				
+			} else {
+				view = inflater.inflate(R.layout.reservation_item, parent, false);
+			}
 		}
 		TextView timeText = (TextView) view.findViewById(R.id.time_text);
 		TextView patientText = (TextView) view.findViewById(R.id.patient);
-		Reservation reservation = getItem(position);
 		timeText.setText(reservation.getTime());
-		String phoneNum = reservation.getPatientPhoneNumber();
-		if (phoneNum.length() > 0) {
-			patientText.setText(reservation.getpatient()+" ("+reservation.getPatientPhoneNumber()+")");
-		} else {
-			patientText.setText(reservation.getpatient());
-		}
+		patientText.setText(reservation.getpatient());
 		
 		view.setBackgroundColor(colors[reservation.getStatus().numCode]);
 		return view;
+	}
+
+	@Override
+	public int getItemViewType(int position) {
+		Status reservationStatus = getItem(position).getStatus();
+		return reservationStatus == Status.booked? 1 : 0;
+	}
+
+	@Override
+	public int getViewTypeCount() {
+		return 2;
 	}
 }
