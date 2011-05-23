@@ -155,7 +155,7 @@ public class Medobs extends Activity implements CalendarListener {
 				
 				@Override
 				public void run() {
-					showDialog(CALENDAR_DIALOG);
+					showCalendar();
 				}
 			};
 			@Override
@@ -381,6 +381,18 @@ public class Medobs extends Activity implements CalendarListener {
 		}
 	}
 
+	private void showCalendar() {
+		if (activeDays == null) {
+			//calendarProgressBar.setVisibility(View.VISIBLE);
+			new FetchDaysTask(new Runnable() {
+				
+				@Override
+				public void run() {
+					showDialog(CALENDAR_DIALOG);
+				}
+			}).execute(calendar);
+		}
+	}
 	private void setCurrentPlace(Place place) {
 		currentPlace = place;
 		if (currentPlace != null) {
@@ -457,8 +469,9 @@ public class Medobs extends Activity implements CalendarListener {
 				if (currentPlace == null && places.size() > 0) {
 					setCurrentPlace(places.get(0));
 				}
-				fetchReservations();
-				new FetchDaysTask().execute(calendar);
+				//fetchReservations();
+				//new FetchDaysTask().execute(calendar);
+				showCalendar();
 			} else {
 				showMessage(R.string.msg_http_error);
 			}
@@ -636,5 +649,6 @@ public class Medobs extends Activity implements CalendarListener {
 		calendar = calendarView.getSelectedValue();
 		activeDays = null;
 		fetchReservations();
+		new FetchDaysTask().execute(calendar);
 	}
 }
