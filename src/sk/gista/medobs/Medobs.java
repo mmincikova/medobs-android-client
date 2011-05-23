@@ -383,7 +383,6 @@ public class Medobs extends Activity implements CalendarListener {
 
 	private void showCalendar() {
 		if (activeDays == null) {
-			//calendarProgressBar.setVisibility(View.VISIBLE);
 			new FetchDaysTask(new Runnable() {
 				
 				@Override
@@ -391,6 +390,8 @@ public class Medobs extends Activity implements CalendarListener {
 					showDialog(CALENDAR_DIALOG);
 				}
 			}).execute(calendar);
+		} else {
+			showDialog(CALENDAR_DIALOG);
 		}
 	}
 	private void setCurrentPlace(Place place) {
@@ -635,10 +636,6 @@ public class Medobs extends Activity implements CalendarListener {
 
 	@Override
 	public void onMonthChanged(CalendarView calendarView, Calendar value) {
-		//System.out.println("onMonthChanged: "+value.getTime());
-		if (client != null && client.isExecuting()) {
-			//client.cancelCurrentRequest();
-		}
 		activeDays = null;
 		new FetchDaysTask().execute(value);
 	}
