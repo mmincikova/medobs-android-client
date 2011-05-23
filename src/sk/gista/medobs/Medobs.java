@@ -211,7 +211,9 @@ public class Medobs extends Activity implements CalendarListener {
 			saveState();
 			places = null;
 			activeDays = null;
-			client.cancelCurrentRequest();
+			if (client != null) {
+				client.cancelCurrentRequest();
+			}
 			client = null;
 			reservationsView.setAdapter(null);
 			startActivity(new Intent(this, Settings.class));
