@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><manifest android:versionCode="1" android:versionName="init-32-g3de01ba
+<?xml version="1.0" ?><manifest android:versionCode="1" android:versionName="init-33-geb121d5
 " package="sk.gista.medobs" xmlns:android="http://schemas.android.com/apk/res/android">
     <application android:icon="@drawable/icon" android:label="@string/app_name">
         <activity android:label="@string/app_name" android:name=".Medobs" android:screenOrientation="portrait">

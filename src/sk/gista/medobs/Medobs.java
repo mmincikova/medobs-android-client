@@ -208,6 +208,7 @@ public class Medobs extends Activity implements CalendarListener {
 			calendarView.setEnabledDays(activeDays);
 		}
 		calendarView.setCalendarListener(this);
+		selectedDateView.setText(labelDateFormat.format(calendar.getTime()));
 	}
 
 	@Override
