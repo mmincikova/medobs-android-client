@@ -33,31 +33,49 @@ public class ReservationAdapter extends ArrayAdapter<Reservation>{
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
-		Reservation reservation = getItem(position);
 		View view = convertView;
 		if (view == null) {
-			if (getItemViewType(position) == 1) { 
+			if (getItemViewType(position) == 1) {
 				view = inflater.inflate(R.layout.reservation_booked_item, parent, false);
-				TextView phoneView = (TextView) view.findViewById(R.id.patient_phone);
-				TextView emailView = (TextView) view.findViewById(R.id.patient_email);
-				phoneView.setText("Phone: "+reservation.getPatientPhoneNumber());
-				if (reservation.getPatientEmail().length() > 0) {
-					emailView.setText("Email: "+reservation.getPatientEmail());
-					emailView.setVisibility(View.VISIBLE);
-				} else {
-					emailView.setVisibility(View.GONE);
-				}
-				
 			} else {
 				view = inflater.inflate(R.layout.reservation_item, parent, false);
 			}
 		}
-		TextView timeText = (TextView) view.findViewById(R.id.time_text);
+		Reservation reservation = getItem(position);
+		String bookedDetail = null;
+		if (reservation.getBookedBy().length() > 0 || reservation.getBookedAt().length() > 0) {
+			bookedDetail = reservation.getBookedBy() + " " + reservation.getBookedAt();
+		}
 		TextView patientText = (TextView) view.findViewById(R.id.patient);
+		TextView timeText = (TextView) view.findViewById(R.id.time_text);
 		timeText.setText(reservation.getTime());
-		patientText.setText(reservation.getpatient());
-		
 		view.setBackgroundColor(colors[reservation.getStatus().numCode]);
+		
+		if (getItemViewType(position) == 1) {
+			TextView phoneView = (TextView) view.findViewById(R.id.patient_phone);
+			TextView emailView = (TextView) view.findViewById(R.id.patient_email);
+			TextView bookedView = (TextView) view.findViewById(R.id.booked);
+			phoneView.setText("Phone: "+reservation.getPatientPhoneNumber());
+			if (reservation.getPatientEmail().length() > 0) {
+				emailView.setText("Email: "+reservation.getPatientEmail());
+				emailView.setVisibility(View.VISIBLE);
+			} else {
+				emailView.setVisibility(View.GONE);
+			}
+			if (bookedDetail != null) {
+				bookedView.setText("("+bookedDetail+")");
+				bookedView.setVisibility(View.VISIBLE);
+			} else {
+				emailView.setVisibility(View.GONE);
+			}
+			patientText.setText(reservation.getpatient());
+		} else {
+			if (bookedDetail != null) {
+				patientText.setText("("+bookedDetail+")");
+			} else {
+				patientText.setText(reservation.getpatient());
+			}
+		}
 		return view;
 	}
 

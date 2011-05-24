@@ -33,13 +33,18 @@ public class Reservation {
 	private String patient;
 	private String patientPhoneNumber;
 	private String patientEmail;
+	private String bookedBy;
+	private String bookedAt;
 	
-	public Reservation(String time, Status status, String patient, String patientPhoneNumber, String patientEmail) {
+	public Reservation(String time, Status status, String patient, String patientPhoneNumber, String patientEmail,
+			String bookedBy, String bookedAt) {
 		this.time = time;
 		this.status = status;
 		this.patient = patient;
 		this.patientPhoneNumber = patientPhoneNumber;
 		this.patientEmail = patientEmail;
+		this.bookedBy = bookedBy;
+		this.bookedAt = bookedAt;
 	}
 
 	public String getTime() {
@@ -60,5 +65,13 @@ public class Reservation {
 
 	public String getPatientEmail() {
 		return patientEmail;
+	}
+
+	public String getBookedBy() {
+		return bookedBy;
+	}
+
+	public String getBookedAt() {
+		return bookedAt;
 	}
 }

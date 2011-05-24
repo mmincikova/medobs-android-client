@@ -572,7 +572,10 @@ public class Medobs extends Activity implements CalendarListener {
 						String patient = reservation.getString("patient");
 						String patientPhone = reservation.getString("phone_number");
 						String patientEmail = reservation.getString("email");
-						reservations.add(new Reservation(time, Reservation.Status.valueOf(status), patient, patientPhone, patientEmail));
+						String bookedBy = reservation.getString("booked_by");
+						String bookedAt = reservation.getString("booked_at");
+						reservations.add(new Reservation(time, Reservation.Status.valueOf(status), patient,
+								patientPhone, patientEmail, bookedBy, bookedAt));
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();
