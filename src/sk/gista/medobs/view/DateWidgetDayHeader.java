@@ -8,7 +8,7 @@ import android.graphics.*;
 
 public class DateWidgetDayHeader extends View {
 	// fields
-	private final static int iDayHeaderFontSize = 12;
+	private int iDayHeaderFontSize = 12;
 
 	// fields
 	private Paint pt = new Paint();
@@ -19,6 +19,8 @@ public class DateWidgetDayHeader extends View {
 	// methods
 	public DateWidgetDayHeader(Context context, int iWidth, int iHeight) {
 		super(context);
+		float density = getResources().getDisplayMetrics().density;
+		iDayHeaderFontSize *= density;
 		setLayoutParams(new LayoutParams(iWidth, iHeight));
 	}
 
@@ -61,7 +63,7 @@ public class DateWidgetDayHeader extends View {
 		super.onDraw(canvas);
 
 		// init rectangles
-		rect.set(0, 0, this.getWidth(), this.getHeight());
+		rect.set(0, 0, getWidth(), getHeight());
 		rect.inset(1, 1);
 
 		// drawing

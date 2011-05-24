@@ -15,8 +15,8 @@ public class DateWidgetDayCell extends View {
 	}
 
 	// fields
-	private final static float fTextSize = 22;
-	private final static int iMargin = 1;
+	private float fTextSize = 22;
+	private int iMargin = 1;
 	private final static int iAlphaInactiveMonth = 0x88;
 
 	// fields
@@ -41,6 +41,9 @@ public class DateWidgetDayCell extends View {
 	// methods
 	public DateWidgetDayCell(Context context, int iWidth, int iHeight) {
 		super(context);
+		float density = getResources().getDisplayMetrics().density;
+		fTextSize *= density;
+		iMargin *= density;
 		setFocusable(true);
 		setLayoutParams(new LayoutParams(iWidth, iHeight));
 	}

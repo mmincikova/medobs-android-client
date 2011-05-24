@@ -50,10 +50,12 @@ public class CalendarView extends LinearLayout {
 
 	// fields
 	public static final int SELECT_DATE_REQUEST = 111;
-	private static final int iDayCellSize = 40;
-	private static final int iDayHeaderHeight = 24;
-	private static final int iTotalWidth = (iDayCellSize * 7);
-	private static final int iSmallButtonWidth = 100;
+	private int iDayCellSize = 39;
+	private int iDayHeaderHeight = 24;
+	private int iTotalWidth = (iDayCellSize * 7);
+	private int iSmallButtonWidth = 100;
+
+	private float density;
 
 	public CalendarView(Context context) {
 		super(context);
@@ -72,6 +74,11 @@ public class CalendarView extends LinearLayout {
 
 	// methods
 	private final void init(Calendar calendar, int firstDayOfWeek, boolean noneButton) {
+		density = getResources().getDisplayMetrics().density;
+		iDayCellSize *= density;
+		iDayHeaderHeight *= density;
+		iTotalWidth *= density;
+		iSmallButtonWidth *= density;
 		
 		// init calendar to defaults
 		calSelected = calendar;
@@ -128,8 +135,8 @@ public class CalendarView extends LinearLayout {
 	}
 
 	private void generateTopButtons(LinearLayout layTopControls) {
-		final int iHorPadding = 24;
-		final int iSmallButtonWidth = 60;
+		final int iHorPadding = (int) (24 * density);
+		final int iSmallButtonWidth = (int) (60 * density);
 
 		// create buttons
 		btnToday = createButton("", iTotalWidth - iSmallButtonWidth - iSmallButtonWidth,
@@ -211,8 +218,8 @@ public class CalendarView extends LinearLayout {
 		generateTopButtons(layTopControls);
 		generateBottomButtons(layBottomControls);
 
-		layContentTop.getLayoutParams().height = 12;
-		layContentBottom.getLayoutParams().height = 18;
+		layContentTop.getLayoutParams().height = (int) (12 * density);
+		layContentBottom.getLayoutParams().height = (int) (18 * density);
 
 		generateCalendar(layContent);
 
