@@ -173,7 +173,6 @@ public class Medobs extends Activity implements CalendarListener {
 			private Runnable postAction = new Runnable() {
 				@Override
 				public void run() {
-					progressBar.setVisibility(View.INVISIBLE);
 					calendarView.setPrevViewItem();
 				}
 			};
@@ -182,7 +181,6 @@ public class Medobs extends Activity implements CalendarListener {
 				cal.setTimeInMillis(calendarView.getCurrentMonth().getTimeInMillis());
 				cal.add(Calendar.MONTH, -1);
 				activeDays = null;
-				progressBar.setVisibility(View.VISIBLE);
 				new FetchDaysTask(postAction).execute(cal);
 			}
 		});
@@ -191,7 +189,6 @@ public class Medobs extends Activity implements CalendarListener {
 			private Runnable postAction = new Runnable() {
 				@Override
 				public void run() {
-					progressBar.setVisibility(View.INVISIBLE);
 					calendarView.setNextViewItem();
 				}
 			};
@@ -200,7 +197,6 @@ public class Medobs extends Activity implements CalendarListener {
 				cal.setTimeInMillis(calendarView.getCurrentMonth().getTimeInMillis());
 				cal.add(Calendar.MONTH, 1);
 				activeDays = null;
-				progressBar.setVisibility(View.VISIBLE);
 				new FetchDaysTask(postAction).execute(cal);
 			}
 		});
@@ -281,6 +277,7 @@ public class Medobs extends Activity implements CalendarListener {
 	private void fetchReservations() {
 		//if (currentPlace != null && client != null && !client.isExecuting()) {
 		if (currentPlace != null && client != null) {
+			selectedDateView.setText(labelDateFormat.format(calendar.getTime()));
 			new FetchReservationsTask().execute(NO_PARAM);
 		}
 	}
@@ -463,12 +460,24 @@ public class Medobs extends Activity implements CalendarListener {
 		return content.toString();
 	}
 
-	private class FetchPlacesTask extends AsyncTask<Object, Integer, String> {
+	private int activeRequestsCount;
+	private abstract class MedobsAsyncTask <Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
 
 		@Override
 		protected void onPreExecute() {
 			progressBar.setVisibility(View.VISIBLE);
+			activeRequestsCount++;
 		}
+
+		protected void onPostExecute(Result result) {
+			activeRequestsCount--;
+			if (activeRequestsCount < 1) {
+				progressBar.setVisibility(View.INVISIBLE);
+			}
+		};
+	}
+
+	private class FetchPlacesTask extends MedobsAsyncTask<Object, Integer, String> {
 
 		@Override
 		protected String doInBackground(Object... params) {
@@ -491,6 +500,7 @@ public class Medobs extends Activity implements CalendarListener {
 
 		@Override
 		protected void onPostExecute(String content) {
+			super.onPostExecute(content);
 			if (content != null) {
 				int lastPlaceId = prefferences.getInt(PLACE_SETTING, 0);
 				places = new ArrayList<Place>();
@@ -521,20 +531,13 @@ public class Medobs extends Activity implements CalendarListener {
 			} else {
 				showMessage(R.string.msg_http_error);
 			}
-			progressBar.setVisibility(View.INVISIBLE);
 		}
 	}
 
 	private static SimpleDateFormat labelDateFormat = new SimpleDateFormat("d MMMM yyyy");
 	private static SimpleDateFormat requestDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	
-	private class FetchReservationsTask extends AsyncTask<Object, Integer, String> {
-
-		@Override
-		protected void onPreExecute() {
-			selectedDateView.setText(labelDateFormat.format(calendar.getTime()));
-			progressBar.setVisibility(View.VISIBLE);
-		}
+	private class FetchReservationsTask extends MedobsAsyncTask<Object, Integer, String> {
 
 		@Override
 		protected String doInBackground(Object ... params) {
@@ -558,7 +561,7 @@ public class Medobs extends Activity implements CalendarListener {
 
 		@Override
 		protected void onPostExecute(String content) {
-			progressBar.setVisibility(View.INVISIBLE);
+			super.onPostExecute(content);
 			List<Reservation> reservations = new ArrayList<Reservation>();
 			if (content != null) {
 				try {
@@ -583,7 +586,7 @@ public class Medobs extends Activity implements CalendarListener {
 		}
 	}
 
-	private class FetchDaysTask extends AsyncTask<Calendar, Integer, String> {
+	private class FetchDaysTask extends MedobsAsyncTask<Calendar, Integer, String> {
 
 		private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM");
 		private Runnable postAction;
@@ -592,11 +595,6 @@ public class Medobs extends Activity implements CalendarListener {
 		
 		public FetchDaysTask(Runnable postAction) {
 			this.postAction = postAction;
-		}
-
-		@Override
-		protected void onPreExecute() {
-			progressBar.setVisibility(View.VISIBLE);
 		}
 
 		@Override
@@ -621,7 +619,7 @@ public class Medobs extends Activity implements CalendarListener {
 
 		@Override
 		protected void onPostExecute(String content) {
-			progressBar.setVisibility(View.INVISIBLE);
+			super.onPostExecute(content);
 			if (content != null) {
 				try {
 					JSONObject data = new JSONObject(content);
@@ -652,13 +650,13 @@ public class Medobs extends Activity implements CalendarListener {
 		}
 	}
 
-	class LoginTask extends AsyncTask<Object, Integer, Boolean> {
+	class LoginTask extends MedobsAsyncTask<Object, Integer, Boolean> {
 		private String username;
 		private String password;
 
 		@Override
 		protected void onPreExecute() {
-			progressBar.setVisibility(View.VISIBLE);
+			super.onPreExecute();
 			username = prefferences.getString(USERNAME_SETTING, "");
 			password = prefferences.getString(PASSWORD_SETTING, "");
 		}
@@ -670,7 +668,7 @@ public class Medobs extends Activity implements CalendarListener {
 
 		@Override
 		protected void onPostExecute(Boolean result) {
-			progressBar.setVisibility(View.INVISIBLE);
+			super.onPostExecute(result);
 			if (result) {
 				new FetchPlacesTask().execute(NO_PARAM);
 			} else {
