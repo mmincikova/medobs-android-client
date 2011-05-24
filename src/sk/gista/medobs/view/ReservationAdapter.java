@@ -63,7 +63,7 @@ public class ReservationAdapter extends ArrayAdapter<Reservation>{
 				emailView.setVisibility(View.GONE);
 			}
 			if (bookedDetail != null) {
-				bookedView.setText("("+bookedDetail+")");
+				bookedView.setText("["+bookedDetail+"]");
 				bookedView.setVisibility(View.VISIBLE);
 			} else {
 				emailView.setVisibility(View.GONE);
@@ -71,7 +71,7 @@ public class ReservationAdapter extends ArrayAdapter<Reservation>{
 			patientText.setText(reservation.getpatient());
 		} else {
 			if (bookedDetail != null) {
-				patientText.setText("("+bookedDetail+")");
+				patientText.setText("["+bookedDetail+"]");
 			} else {
 				patientText.setText(reservation.getpatient());
 			}
