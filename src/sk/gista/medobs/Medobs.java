@@ -53,9 +53,9 @@ public class Medobs extends Activity implements CalendarListener {
 	private static final String SERVER_URL_SETTING = "server_url";
 	private static final String USERNAME_SETTING = "username";
 	private static final String PASSWORD_SETTING = "password";
-	private static final String PLACE_SETTING = "place";
+	private static final String OFFICE_SETTING = "office";
 	
-	private static final int PLACES_DIALOG = 0;
+	private static final int OFFICES_DIALOG = 0;
 	private static final int ABOUT_DIALOG = 1;
 
 	private static final Object NO_PARAM = null;
@@ -63,8 +63,8 @@ public class Medobs extends Activity implements CalendarListener {
 	private SharedPreferences prefferences;
 	private Client client;
 	private Calendar calendar;
-	private List<Place> places;
-	private Place currentPlace;
+	private List<Office> offices;
+	private Office currentOffice;
 	private List<Integer> activeDays; //in current month
 	
 	private ListView reservationsView;
@@ -245,12 +245,12 @@ public class Medobs extends Activity implements CalendarListener {
 				}
 			}
 			return true;
-		case R.id.menu_select_place:
-			showDialog(PLACES_DIALOG);
+		case R.id.menu_select_office:
+			showDialog(OFFICES_DIALOG);
 			return true;
 		case R.id.menu_settings:
 			saveState();
-			places = null;
+			offices = null;
 			activeDays = null;
 			if (client != null) {
 				client.cancelCurrentRequest();
@@ -267,16 +267,15 @@ public class Medobs extends Activity implements CalendarListener {
 	}
 
 	private void saveState() {
-		if (currentPlace != null) {
+		if (currentOffice != null) {
 			Editor editor = prefferences.edit();
-			editor.putInt(PLACE_SETTING, currentPlace.getId());
+			editor.putInt(OFFICE_SETTING, currentOffice.getId());
 			editor.commit();
 		}
 	}
 
 	private void fetchReservations() {
-		//if (currentPlace != null && client != null && !client.isExecuting()) {
-		if (currentPlace != null && client != null) {
+		if (currentOffice != null && client != null) {
 			selectedDateView.setText(labelDateFormat.format(calendar.getTime()));
 			new FetchReservationsTask().execute(NO_PARAM);
 		}
@@ -311,20 +310,20 @@ public class Medobs extends Activity implements CalendarListener {
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog = null;
 		switch(id) {
-		case PLACES_DIALOG:
+		case OFFICES_DIALOG:
 			DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
 
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					if (which < places.size()) {
-						setCurrentPlace(places.get(which));
+					if (which < offices.size()) {
+						setCurrentOffice(offices.get(which));
 						fetchReservations();
 						new FetchDaysTask().execute(calendar);
 					}
 				}
 			};
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.label_select_place);
+			builder.setTitle(R.string.label_select_office);
 			builder.setItems(new String[0], listener);
 			dialog = builder.create();
 			break;
@@ -340,23 +339,23 @@ public class Medobs extends Activity implements CalendarListener {
 	protected void onPrepareDialog(int id, Dialog dialog) {
 		super.onPrepareDialog(id, dialog);
 		switch (id) {
-		case PLACES_DIALOG: 
-			AlertDialog placesDialog = (AlertDialog) dialog;
+		case OFFICES_DIALOG: 
+			AlertDialog officesDialog = (AlertDialog) dialog;
 			String[] items = {};
 			int selectedItem = -1;
-			if (places != null) {
-				items = new String[places.size()];
-				for (int i = 0; i < places.size(); i++) {
-					items[i] = places.get(i).getName();
-					if (currentPlace != null && currentPlace.getId() == places.get(i).getId()) {
+			if (offices != null) {
+				items = new String[offices.size()];
+				for (int i = 0; i < offices.size(); i++) {
+					items[i] = offices.get(i).getName();
+					if (currentOffice != null && currentOffice.getId() == offices.get(i).getId()) {
 						selectedItem = i;
 					}
 				}
 			}
-			ListView list = placesDialog.getListView();
+			ListView list = officesDialog.getListView();
 			list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 			
-			placesDialog.getListView().setAdapter(new ArrayAdapter<String>(this, R.layout.simple_list_item_single_choice, items));
+			officesDialog.getListView().setAdapter(new ArrayAdapter<String>(this, R.layout.simple_list_item_single_choice, items));
 			if (selectedItem != -1) {
 				list.setItemChecked(selectedItem, true);
 			}
@@ -436,10 +435,10 @@ public class Medobs extends Activity implements CalendarListener {
 		new FetchDaysTask().execute(calendar);
 	}
 
-	private void setCurrentPlace(Place place) {
-		currentPlace = place;
-		if (currentPlace != null) {
-			setTitle(String.format("%s - %s (%s)", getString(R.string.app_name), currentPlace.getName(), currentPlace.getStreet()));
+	private void setCurrentOffice(Office office) {
+		currentOffice = office;
+		if (currentOffice != null) {
+			setTitle(String.format("%s - %s (%s)", getString(R.string.app_name), currentOffice.getName(), currentOffice.getStreet()));
 		} else {
 			setTitle(getString(R.string.app_name));
 		}
@@ -477,7 +476,7 @@ public class Medobs extends Activity implements CalendarListener {
 		};
 	}
 
-	private class FetchPlacesTask extends MedobsAsyncTask<Object, Integer, String> {
+	private class FetchOfficesTask extends MedobsAsyncTask<Object, Integer, String> {
 
 		@Override
 		protected String doInBackground(Object... params) {
@@ -485,7 +484,7 @@ public class Medobs extends Activity implements CalendarListener {
 			if (client != null) {
 				HttpResponse resp = null;
 				try {
-					resp = client.httpGet("/places/");
+					resp = client.httpGet("/offices/");
 					if (resp.getStatusLine().getStatusCode() < 400) {
 						content = readInputStream(resp.getEntity().getContent());
 					}
@@ -502,28 +501,28 @@ public class Medobs extends Activity implements CalendarListener {
 		protected void onPostExecute(String content) {
 			super.onPostExecute(content);
 			if (content != null) {
-				int lastPlaceId = prefferences.getInt(PLACE_SETTING, 0);
-				places = new ArrayList<Place>();
+				int lastOfficeId = prefferences.getInt(OFFICE_SETTING, 0);
+				offices = new ArrayList<Office>();
 				try {
-					JSONArray jsonPlaces = new JSONArray(content);
-					for (int i = 0; i < jsonPlaces.length(); i++) {
-						JSONObject jsonPlace = jsonPlaces.getJSONObject(i);
-						int id = jsonPlace.getInt("id");
-						String name = jsonPlace.getString("name");
-						String street = jsonPlace.getString("street");
-						String city = jsonPlace.getString("city");
-						Place place = new Place(id, name, street, city);
-						places.add(place);
-						if (id == lastPlaceId) {
-							setCurrentPlace(place);
+					JSONArray jsonOffices = new JSONArray(content);
+					for (int i = 0; i < jsonOffices.length(); i++) {
+						JSONObject jsonOffice = jsonOffices.getJSONObject(i);
+						int id = jsonOffice.getInt("id");
+						String name = jsonOffice.getString("name");
+						String street = jsonOffice.getString("street");
+						String city = jsonOffice.getString("city");
+						Office office = new Office(id, name, street, city);
+						offices.add(office);
+						if (id == lastOfficeId) {
+							setCurrentOffice(office);
 						}
 					}
 				}  catch (JSONException e) {
 					e.printStackTrace();
 					showMessage(R.string.msg_bad_response_error);
 				}
-				if (currentPlace == null && places.size() > 0) {
-					setCurrentPlace(places.get(0));
+				if (currentOffice == null && offices.size() > 0) {
+					setCurrentOffice(offices.get(0));
 				}
 				//fetchReservations();
 				//new FetchDaysTask().execute(calendar);
@@ -542,11 +541,11 @@ public class Medobs extends Activity implements CalendarListener {
 		@Override
 		protected String doInBackground(Object ... params) {
 			String content = null;
-			if (client != null && currentPlace != null) {
+			if (client != null && currentOffice != null) {
 				String date = requestDateFormat.format(calendar.getTime());
 				HttpResponse resp = null;
 				try {
-					resp = client.httpGet("/reservations/"+date+"/"+currentPlace.getId()+"/");
+					resp = client.httpGet("/reservations/"+date+"/"+currentOffice.getId()+"/");
 					if (resp.getStatusLine().getStatusCode() < 400) {
 						content = readInputStream(resp.getEntity().getContent());
 					}
@@ -600,11 +599,11 @@ public class Medobs extends Activity implements CalendarListener {
 		@Override
 		protected String doInBackground(Calendar... params) {
 			String content = null;
-			if (client != null && currentPlace != null) {
+			if (client != null && currentOffice != null) {
 				HttpResponse resp = null;
 				String date = dateFormat.format(params[0].getTime());
 				try {
-					resp = client.httpGet("/days_status/"+date+"/"+currentPlace.getId()+"/");
+					resp = client.httpGet("/days_status/"+date+"/"+currentOffice.getId()+"/");
 					if (resp != null && resp.getStatusLine().getStatusCode() < 400) {
 						content = readInputStream(resp.getEntity().getContent());
 					}
@@ -670,7 +669,7 @@ public class Medobs extends Activity implements CalendarListener {
 		protected void onPostExecute(Boolean result) {
 			super.onPostExecute(result);
 			if (result) {
-				new FetchPlacesTask().execute(NO_PARAM);
+				new FetchOfficesTask().execute(NO_PARAM);
 			} else {
 				showMessage(R.string.msg_login_failed);
 			}

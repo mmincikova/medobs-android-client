@@ -3,8 +3,8 @@
 	<item android:id="@+id/menu_refresh"
 		android:title="@string/label_refresh"
 		android:icon="@drawable/ic_menu_refresh" />
-	<item android:id="@+id/menu_select_place"
-		android:title="@string/label_select_place"
+	<item android:id="@+id/menu_select_office"
+		android:title="@string/label_select_office"
 		android:icon="@android:drawable/ic_menu_add" />
    <item android:id="@+id/menu_settings"
 		android:title="@string/label_settings"
