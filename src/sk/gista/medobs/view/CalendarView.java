@@ -50,7 +50,7 @@ public class CalendarView extends LinearLayout {
 
 	// fields
 	public static final int SELECT_DATE_REQUEST = 111;
-	private static final int iDayCellSize = 38;
+	private static final int iDayCellSize = 40;
 	private static final int iDayHeaderHeight = 24;
 	private static final int iTotalWidth = (iDayCellSize * 7);
 	private static final int iSmallButtonWidth = 100;
@@ -198,19 +198,15 @@ public class CalendarView extends LinearLayout {
 	}
 
 	private void generateContentView() {
-		setLayoutParams(new LayoutParams(android.view.ViewGroup.LayoutParams.FILL_PARENT,
-				android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
 		setOrientation(LinearLayout.VERTICAL);
 		
-		setPadding(8, 8, 8, 8);
-
 		LinearLayout layTopControls = createLayout(LinearLayout.HORIZONTAL);
 		LinearLayout layContentTop = createLayout(LinearLayout.HORIZONTAL);
 		LinearLayout layContentBottom = createLayout(LinearLayout.HORIZONTAL);
 		LinearLayout layBottomControls = createLayout(LinearLayout.HORIZONTAL);
 
 		layContent = createLayout(LinearLayout.VERTICAL);
-		layContent.setPadding(8, 0, 8, 0);
+		//layContent.setPadding(8, 0, 8, 0);
 
 		generateTopButtons(layTopControls);
 		generateBottomButtons(layBottomControls);

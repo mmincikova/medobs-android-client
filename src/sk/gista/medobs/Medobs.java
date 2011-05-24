@@ -395,10 +395,10 @@ public class Medobs extends Activity implements CalendarListener {
 		calendarView.setVisibility(View.VISIBLE);
 		AnimationSet animation = new AnimationSet(true);
 		ScaleAnimation scaleAnim = new ScaleAnimation(0.7f, 1f, 0.7f, 1f, reservationsView.getWidth()/2, reservationsView.getHeight()/2);
-		AlphaAnimation alphaAnimation = new AlphaAnimation(0.1f, 1f);
+		AlphaAnimation alphaAnimation = new AlphaAnimation(0.0f, 1f);
 		animation.addAnimation(scaleAnim);
 		animation.addAnimation(alphaAnimation);
-		animation.setDuration(200);
+		animation.setDuration(150);
 		AlphaAnimation bgAlphaAnimation = new AlphaAnimation(0.0f, 1f);
 		bgAlphaAnimation.setDuration(500);
 		calendarBg.startAnimation(bgAlphaAnimation);
@@ -406,10 +406,14 @@ public class Medobs extends Activity implements CalendarListener {
 	}
 
 	private void hideCalendar() {
+		AnimationSet calendarAnim = new AnimationSet(true);
 		ScaleAnimation scaleAnim = new ScaleAnimation(1f, 0.7f, 1f, 0.7f, reservationsView.getWidth()/2, reservationsView.getHeight()/2);
-		scaleAnim.setDuration(200);
+		AlphaAnimation alphaAnimation = new AlphaAnimation(1f, 0.0f);
+		calendarAnim.addAnimation(scaleAnim);
+		calendarAnim.addAnimation(alphaAnimation);
+		calendarAnim.setDuration(150);
 		AlphaAnimation bgAlphaAnimation = new AlphaAnimation(1f, 0);
-		bgAlphaAnimation.setDuration(200);
+		bgAlphaAnimation.setDuration(150);
 		bgAlphaAnimation.setAnimationListener(new Animation.AnimationListener() {
 			
 			@Override
@@ -427,7 +431,7 @@ public class Medobs extends Activity implements CalendarListener {
 			}
 		});
 		calendarBg.startAnimation(bgAlphaAnimation);
-		calendarView.startAnimation(scaleAnim);
+		calendarView.startAnimation(calendarAnim);
 		
 		activeDays = null;
 		fetchReservations();

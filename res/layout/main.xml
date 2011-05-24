@@ -68,10 +68,15 @@
 	/>
 	<sk.gista.medobs.view.CalendarView
 		android:id="@+id/calendar"
-		android:layout_centerInParent="true"
+		android:layout_centerHorizontal="true"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:background="#99999999"
+		android:background="@drawable/ic_dialog"
+		android:paddingTop="25dp"
+		android:paddingLeft="22dp"
+		android:paddingRight="22dp"
+		android:layout_marginBottom="10dp"
+		android:layout_marginTop="10dp"
 		android:visibility="invisible"
 	/>
 	<android.widget.ProgressBar
