@@ -8,7 +8,7 @@ import android.widget.Button;
 
 public class SymbolButton extends Button {
 	// fields
-	private static final int iColor = 0xffaaaaaa;
+	private static final int iColor = 0xff777777;
 	private static final int iColorActive = 0xff442200;
 
 	// fields
@@ -21,11 +21,13 @@ public class SymbolButton extends Button {
 	private RectF rect = new RectF();
 	private RectF rectDraw = new RectF();
 	private symbol symbolType = symbol.none;
+	private float density;
 
 	// methods
 	public SymbolButton(Context context, symbol symbolType) {
 		super(context);
 		this.symbolType = symbolType;
+		density = getResources().getDisplayMetrics().density;
 	}
 
 	@Override
@@ -36,13 +38,13 @@ public class SymbolButton extends Button {
 		pt.setStrokeCap(Paint.Cap.ROUND);
 
 		rectDraw.set(0, 0, getWidth(), getHeight());
-		rectDraw.left += 6;
-		rectDraw.right -= 6;
-		rectDraw.top += 4;
-		rectDraw.bottom -= 8;
+		rectDraw.left += 6 * density;
+		rectDraw.right -= 6 * density;
+		rectDraw.top += 4 * density;
+		rectDraw.bottom -= 8 * density;
 
 		if (symbolType != symbol.none) {
-			pt.setStrokeWidth(5);
+			pt.setStrokeWidth(5 * density);
 
 			pt.setColor(iColor);
 			if (this.isPressed() || this.isFocused())
@@ -54,15 +56,16 @@ public class SymbolButton extends Button {
 
 	private void drawArrow(Canvas canvas) {
 		rect.set(rectDraw);
-		rect.inset(15, 5);
+		rect.inset(15 * density, 5 * density);
+		float c = 6 * density;
 		canvas.drawLine(rect.left, rect.centerY(), rect.right, rect.centerY(), pt);
 		if (symbolType == symbol.arrowRight) {
-			canvas.drawLine(rect.right, rect.centerY(), rect.right - 6, rect.top, pt);
-			canvas.drawLine(rect.right, rect.centerY(), rect.right - 6, rect.bottom, pt);
+			canvas.drawLine(rect.right, rect.centerY(), rect.right - c, rect.top, pt);
+			canvas.drawLine(rect.right, rect.centerY(), rect.right - c, rect.bottom, pt);
 		}
 		if (symbolType == symbol.arrowLeft) {
-			canvas.drawLine(rect.left, rect.centerY(), rect.left + 6, rect.top, pt);
-			canvas.drawLine(rect.left, rect.centerY(), rect.left + 6, rect.bottom, pt);
+			canvas.drawLine(rect.left, rect.centerY(), rect.left + c, rect.top, pt);
+			canvas.drawLine(rect.left, rect.centerY(), rect.left + c, rect.bottom, pt);
 		}
 	}
 
