@@ -20,8 +20,8 @@ public class CalendarView extends LinearLayout {
 	private ArrayList<DateWidgetDayCell> days = new ArrayList<DateWidgetDayCell>();
 
 	// fields
-	private SimpleDateFormat dateMonth = new SimpleDateFormat("MMMM yyyy");
-	private SimpleDateFormat dateFull = new SimpleDateFormat("d MMMM yyyy");
+	private SimpleDateFormat dateMonth = new SimpleDateFormat("MMMM yyyy", Locale.ENGLISH);
+	private SimpleDateFormat dateFull = new SimpleDateFormat("d MMMM yyyy", Locale.ENGLISH);
 
 	// fields
 	private Calendar calStartDate = Calendar.getInstance();

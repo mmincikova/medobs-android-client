@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.http.HttpResponse;
 import org.json.JSONArray;
@@ -533,7 +534,7 @@ public class Medobs extends Activity implements CalendarListener {
 		}
 	}
 
-	private static SimpleDateFormat labelDateFormat = new SimpleDateFormat("d MMMM yyyy");
+	private static SimpleDateFormat labelDateFormat = new SimpleDateFormat("d MMMM yyyy", Locale.ENGLISH);
 	private static SimpleDateFormat requestDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	
 	private class FetchReservationsTask extends MedobsAsyncTask<Object, Integer, String> {
