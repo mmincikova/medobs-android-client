@@ -35,9 +35,10 @@ public class Reservation {
 	private String patientEmail;
 	private String bookedBy;
 	private String bookedAt;
+	private String examinationKind; 
 	
 	public Reservation(String time, Status status, String patient, String patientPhoneNumber, String patientEmail,
-			String bookedBy, String bookedAt) {
+			String bookedBy, String bookedAt, String examinationKind) {
 		this.time = time;
 		this.status = status;
 		this.patient = patient;
@@ -45,6 +46,7 @@ public class Reservation {
 		this.patientEmail = patientEmail;
 		this.bookedBy = bookedBy;
 		this.bookedAt = bookedAt;
+		this.examinationKind = examinationKind;
 	}
 
 	public String getTime() {
@@ -73,5 +75,9 @@ public class Reservation {
 
 	public String getBookedAt() {
 		return bookedAt;
+	}
+
+	public String getExaminationKind() {
+		return examinationKind;
 	}
 }

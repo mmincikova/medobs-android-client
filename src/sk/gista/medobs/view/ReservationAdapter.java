@@ -52,6 +52,7 @@ public class ReservationAdapter extends ArrayAdapter<Reservation>{
 		view.setBackgroundColor(colors[reservation.getStatus().numCode]);
 		
 		if (getItemViewType(position) == 1) {
+			TextView examKindView = (TextView) view.findViewById(R.id.examination_kind);
 			TextView phoneView = (TextView) view.findViewById(R.id.patient_phone);
 			TextView emailView = (TextView) view.findViewById(R.id.patient_email);
 			TextView bookedView = (TextView) view.findViewById(R.id.booked);
@@ -67,6 +68,11 @@ public class ReservationAdapter extends ArrayAdapter<Reservation>{
 				bookedView.setVisibility(View.VISIBLE);
 			} else {
 				emailView.setVisibility(View.GONE);
+			}
+			if (reservation.getExaminationKind().length() > 0) {
+				examKindView.setText(reservation.getExaminationKind());
+			} else {
+				examKindView.setVisibility(View.GONE);
 			}
 			patientText.setText(reservation.getpatient());
 		} else {
